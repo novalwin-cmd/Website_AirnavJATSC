@@ -27,3 +27,8 @@ coverage/
 # Logs
 logs/
 *.log
+
+# Claude/Gemini local skills and config
+.claude/
+.gemini/
+.impeccable/
