@@ -1,0 +1,88 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: dark;
+  color: #e0e0e0;
+  background-color: #0f1419;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background: #0f1419;
+  color: #e0e0e0;
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+#app {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(76, 219, 189, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(76, 219, 189, 0.5);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(76, 219, 189, 0.7);
+}
+
+/* Selection Color */
+::selection {
+  background: rgba(76, 219, 189, 0.3);
+  color: #ffffff;
+}
+
+::-moz-selection {
+  background: rgba(76, 219, 189, 0.3);
+  color: #ffffff;
+}
+
+/* Input Focus Styles */
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+}
+
+/* Button Defaults */
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* Link Defaults */
+a {
+  color: #4cdbbd;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: #3ac9ad;
+}
