@@ -315,13 +315,17 @@ const exportPDF = () => {
 
   const blob = new Blob([html], { type: 'text/html' })
   const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = 'AMC_Logs_' + new Date().toISOString().split('T')[0] + '.html'
-  link.click()
-  URL.revokeObjectURL(url)
-
-  alert('✅ PDF ready! Print dialog opening.')
+  const printWindow = window.open(url)
+  if (printWindow) {
+    printWindow.onload = () => {
+      setTimeout(() => {
+        printWindow.print()
+      }, 250)
+    }
+  } else {
+    alert('Please enable popups to export PDF')
+  }
+  setTimeout(() => { URL.revokeObjectURL(url) }, 1000)
 }
 
 const clearLogs = () => {
