@@ -628,7 +628,7 @@ const getSystemStatusText = () => {
 .dashboard-hmi {
   width: 100%;
   min-height: 100vh;
-  background: #2B4C7E;
+  background: #0f1419;
   display: flex;
   flex-direction: column;
   font-family: 'Inter', 'Roboto', system-ui, sans-serif;
@@ -636,14 +636,14 @@ const getSystemStatusText = () => {
 
 /* Header */
 .header-top {
-  background: #2A4B7C;
-  border-bottom: 2px solid rgba(234, 239, 245, 0.2);
+  background: linear-gradient(135deg, #0f1419 0%, #1a2332 100%);
+  border-bottom: 2px solid rgba(76, 219, 189, 0.2);
   padding: 16px 32px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 32px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .header-left {
@@ -655,7 +655,7 @@ const getSystemStatusText = () => {
 .header-brand {
   font-size: 11px;
   letter-spacing: 2.5px;
-  color: #FFFFFF;
+  color: #4cdbbd;
   text-transform: uppercase;
   font-weight: 700;
 }
@@ -663,7 +663,7 @@ const getSystemStatusText = () => {
 .header-title {
   font-size: 20px;
   font-weight: 600;
-  color: #EAEFF5;
+  color: #ffffff;
 }
 
 .header-right {
@@ -699,10 +699,11 @@ const getSystemStatusText = () => {
 .user-status {
   font-size: 12px;
   color: #a0aec0;
+  margin-left: 12px;
 }
 
 .user-status strong {
-  color: #ffffff;
+  color: #4cdbbd;
 }
 
 .user-status-detail {
@@ -726,8 +727,8 @@ const getSystemStatusText = () => {
 /* Sidebar */
 .sidebar {
   width: 200px;
-  background: #EAEFF5;
-  border-right: 2px solid rgba(42, 75, 124, 0.1);
+  background: linear-gradient(180deg, #1a2332 0%, #0f1419 100%);
+  border-right: 2px solid rgba(76, 219, 189, 0.15);
   padding: 24px 16px;
   overflow-y: auto;
   display: flex;
@@ -738,7 +739,7 @@ const getSystemStatusText = () => {
 .sidebar-title {
   font-size: 12px;
   letter-spacing: 1px;
-  color: #2A4B7C;
+  color: #4cdbbd;
   text-transform: uppercase;
   font-weight: 700;
   padding: 8px 12px;
@@ -758,7 +759,7 @@ const getSystemStatusText = () => {
   background: transparent;
   border: 1.5px solid transparent;
   border-radius: 10px;
-  color: #64748B;
+  color: #a0aec0;
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
@@ -768,15 +769,15 @@ const getSystemStatusText = () => {
 }
 
 .nav-btn:hover {
-  background: rgba(42, 75, 124, 0.08);
-  color: #2A4B7C;
+  background: rgba(76, 219, 189, 0.1);
+  color: #4cdbbd;
 }
 
 .nav-btn.active {
-  background: #2A4B7C;
-  color: #FFFFFF;
-  border-color: #2A4B7C;
-  box-shadow: 0 4px 12px rgba(42, 75, 124, 0.25);
+  background: rgba(76, 219, 189, 0.15);
+  color: #4cdbbd;
+  border-color: #4cdbbd;
+  box-shadow: 0 4px 12px rgba(76, 219, 189, 0.2);
 }
 
 .nav-icon {
@@ -794,7 +795,7 @@ const getSystemStatusText = () => {
 
 .sidebar-divider {
   height: 1px;
-  background: rgba(42, 75, 124, 0.15);
+  background: rgba(76, 219, 189, 0.15);
 }
 
 .sidebar-section {
@@ -806,7 +807,7 @@ const getSystemStatusText = () => {
 .sidebar-label {
   font-size: 11px;
   letter-spacing: 1px;
-  color: #64748B;
+  color: #a0aec0;
   text-transform: uppercase;
   font-weight: 700;
   padding: 8px 12px;
@@ -815,7 +816,7 @@ const getSystemStatusText = () => {
 /* Main Content Area */
 .main-content {
   flex: 1;
-  background: #EAEFF5;
+  background: #0f1419;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -842,37 +843,38 @@ const getSystemStatusText = () => {
 .view-title {
   font-size: 28px;
   font-weight: 600;
-  color: #1E293B;
+  color: #ffffff;
   margin: 0 0 8px 0;
 }
 
 .view-desc {
   font-size: 14px;
-  color: #64748B;
+  color: #a0aec0;
   margin: 0;
 }
 
 .mode-indicator {
   padding: 8px 16px;
-  background: rgba(42, 75, 124, 0.1);
+  background: rgba(76, 219, 189, 0.15);
   border-radius: 8px;
   font-size: 12px;
   font-weight: 600;
-  color: #64748B;
+  color: #a0aec0;
   letter-spacing: 0.5px;
 }
 
 .mode-indicator.active {
-  background: rgba(16, 185, 129, 0.15);
-  color: #10B981;
+  background: rgba(76, 219, 189, 0.2);
+  color: #4cdbbd;
 }
 
 /* Power Meter Panel */
 .power-meter-panel {
-  background: #FFFFFF;
+  background: linear-gradient(135deg, rgba(26, 35, 50, 0.8) 0%, rgba(15, 20, 25, 0.8) 100%);
+  border: 1px solid rgba(76, 219, 189, 0.2);
   border-radius: 16px;
   padding: 24px;
-  box-shadow: 10px 10px 20px rgba(209, 217, 230, 0.5), -5px -5px 15px rgba(255, 255, 255, 0.8);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 .power-meter-header {
@@ -885,7 +887,7 @@ const getSystemStatusText = () => {
 .power-meter-header h3 {
   font-size: 16px;
   font-weight: 600;
-  color: #1E293B;
+  color: #ffffff;
   margin: 0;
 }
 
@@ -900,17 +902,17 @@ const getSystemStatusText = () => {
 
 .status-badge.normal {
   background: rgba(16, 185, 129, 0.2);
-  color: #10B981;
+  color: #22c55e;
 }
 
 .status-badge.warning {
   background: rgba(245, 158, 11, 0.2);
-  color: #F59E0B;
+  color: #f59e0b;
 }
 
 .status-badge.critical {
-  background: rgba(225, 29, 72, 0.2);
-  color: #E11D48;
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
 }
 
 .meter-display {
@@ -920,12 +922,12 @@ const getSystemStatusText = () => {
 }
 
 .meter-item {
-  background: linear-gradient(135deg, #EAEFF5 0%, #F5F8FC 100%);
+  background: rgba(26, 35, 50, 0.6);
+  border: 1px solid rgba(76, 219, 189, 0.15);
   border-radius: 12px;
   padding: 16px;
   text-align: center;
   position: relative;
-  box-shadow: 5px 5px 15px rgba(209, 217, 230, 0.3), -3px -3px 10px rgba(255, 255, 255, 0.6);
 }
 
 .meter-icon {
@@ -935,7 +937,7 @@ const getSystemStatusText = () => {
 
 .meter-label {
   font-size: 11px;
-  color: #64748B;
+  color: #a0aec0;
   text-transform: uppercase;
   letter-spacing: 0.4px;
   margin-bottom: 8px;
@@ -945,16 +947,17 @@ const getSystemStatusText = () => {
 .meter-value {
   font-size: 24px;
   font-weight: 700;
-  color: #2A4B7C;
+  color: #4cdbbd;
 }
 
 
 /* ACB Control Panel */
 .acb-control-panel {
-  background: #FFFFFF;
+  background: linear-gradient(135deg, rgba(26, 35, 50, 0.8) 0%, rgba(15, 20, 25, 0.8) 100%);
+  border: 1px solid rgba(76, 219, 189, 0.2);
   border-radius: 16px;
   padding: 24px;
-  box-shadow: 10px 10px 20px rgba(209, 217, 230, 0.5), -5px -5px 15px rgba(255, 255, 255, 0.8);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 .acb-header {
@@ -963,22 +966,22 @@ const getSystemStatusText = () => {
   align-items: center;
   margin-bottom: 24px;
   padding-bottom: 16px;
-  border-bottom: 1px solid rgba(42, 75, 124, 0.1);
+  border-bottom: 1px solid rgba(76, 219, 189, 0.15);
 }
 
 .acb-header h3 {
   font-size: 16px;
   font-weight: 600;
-  color: #1E293B;
+  color: #ffffff;
   margin: 0;
 }
 
 .btn-check-alert {
   padding: 8px 16px;
-  background: rgba(245, 158, 11, 0.15);
-  border: 1.5px solid #F59E0B;
+  background: rgba(249, 115, 22, 0.15);
+  border: 1.5px solid rgba(249, 115, 22, 0.4);
   border-radius: 8px;
-  color: #D97706;
+  color: #f97316;
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
@@ -986,14 +989,15 @@ const getSystemStatusText = () => {
 }
 
 .btn-check-alert:hover {
-  background: rgba(245, 158, 11, 0.25);
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+  background: rgba(249, 115, 22, 0.25);
+  border-color: #f97316;
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.2);
 }
 
 /* ACB Channels */
 .acb-channel {
-  background: #F8FAFC;
-  border: 1.5px solid rgba(42, 75, 124, 0.1);
+  background: rgba(26, 35, 50, 0.6);
+  border: 1px solid rgba(76, 219, 189, 0.15);
   border-radius: 12px;
   padding: 20px;
   margin-bottom: 16px;
@@ -1015,7 +1019,7 @@ const getSystemStatusText = () => {
 .channel-name {
   font-size: 14px;
   font-weight: 600;
-  color: #1E293B;
+  color: #ffffff;
 }
 
 .acb-status {
@@ -1032,18 +1036,18 @@ const getSystemStatusText = () => {
 }
 
 .acb-status.status-open {
-  background: rgba(16, 185, 129, 0.2);
-  color: #10B981;
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
 }
 
 .acb-status.status-closed {
-  background: rgba(59, 130, 246, 0.2);
-  color: #3B82F6;
+  background: rgba(76, 219, 189, 0.2);
+  color: #4cdbbd;
 }
 
 .acb-status.status-trip {
-  background: rgba(225, 29, 72, 0.2);
-  color: #E11D48;
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
 }
 
 .channel-metrics {
@@ -1058,13 +1062,14 @@ const getSystemStatusText = () => {
   align-items: center;
   gap: 4px;
   padding: 12px;
-  background: linear-gradient(135deg, #EAEFF5 0%, #F5F8FC 100%);
+  background: rgba(26, 35, 50, 0.6);
+  border: 1px solid rgba(76, 219, 189, 0.1);
   border-radius: 10px;
 }
 
 .metric-label {
   font-size: 10px;
-  color: #64748B;
+  color: #a0aec0;
   text-transform: uppercase;
   letter-spacing: 0.3px;
   font-weight: 600;
@@ -1073,7 +1078,7 @@ const getSystemStatusText = () => {
 .metric-value {
   font-size: 16px;
   font-weight: 700;
-  color: #2A4B7C;
+  color: #4cdbbd;
 }
 
 
@@ -1135,33 +1140,36 @@ const getSystemStatusText = () => {
 }
 
 .btn-acb-open {
-  background: #10B981;
-  color: #FFFFFF;
+  background: rgba(76, 219, 189, 0.2);
+  color: #4cdbbd;
+  border: 1px solid #4cdbbd;
 }
 
 .btn-acb-open:hover:not(:disabled) {
-  background: #059669;
-  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+  background: rgba(76, 219, 189, 0.3);
+  box-shadow: 0 4px 12px rgba(76, 219, 189, 0.2);
 }
 
 .btn-acb-trip {
-  background: #F59E0B;
-  color: #FFFFFF;
+  background: rgba(249, 115, 22, 0.2);
+  color: #f97316;
+  border: 1px solid #f97316;
 }
 
 .btn-acb-trip:hover {
-  background: #D97706;
-  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3);
+  background: rgba(249, 115, 22, 0.3);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.2);
 }
 
 .btn-acb-close {
-  background: #E11D48;
-  color: #FFFFFF;
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  border: 1px solid #ef4444;
 }
 
 .btn-acb-close:hover:not(:disabled) {
-  background: #BE185D;
-  box-shadow: 0 8px 20px rgba(225, 29, 72, 0.3);
+  background: rgba(239, 68, 68, 0.3);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
 }
 
 .control-disabled {
@@ -1170,9 +1178,10 @@ const getSystemStatusText = () => {
   align-items: center;
   justify-content: center;
   padding: 16px;
-  background: rgba(59, 130, 246, 0.1);
+  background: rgba(249, 115, 22, 0.1);
+  border: 1px solid rgba(249, 115, 22, 0.3);
   border-radius: 8px;
-  color: #3B82F6;
+  color: #f97316;
   font-size: 12px;
   font-weight: 600;
   text-align: center;
@@ -1200,10 +1209,10 @@ const getSystemStatusText = () => {
 .mode-btn {
   flex: 1;
   padding: 12px 20px;
-  background: rgba(42, 75, 124, 0.1);
-  border: 1.5px solid rgba(42, 75, 124, 0.2);
+  background: rgba(76, 219, 189, 0.1);
+  border: 1.5px solid rgba(76, 219, 189, 0.3);
   border-radius: 8px;
-  color: #64748B;
+  color: #a0aec0;
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
@@ -1211,14 +1220,15 @@ const getSystemStatusText = () => {
 }
 
 .mode-btn:hover {
-  background: rgba(42, 75, 124, 0.15);
+  background: rgba(76, 219, 189, 0.15);
+  border-color: #4cdbbd;
 }
 
 .mode-btn.active {
-  background: #2A4B7C;
-  border-color: #2A4B7C;
-  color: #FFFFFF;
-  box-shadow: 0 4px 12px rgba(42, 75, 124, 0.25);
+  background: rgba(76, 219, 189, 0.2);
+  border-color: #4cdbbd;
+  color: #4cdbbd;
+  box-shadow: 0 4px 12px rgba(76, 219, 189, 0.2);
 }
 
 /* Empty State */
@@ -1240,13 +1250,13 @@ const getSystemStatusText = () => {
 
 .empty-state h2 {
   font-size: 24px;
-  color: #1E293B;
+  color: #ffffff;
   margin: 0;
 }
 
 .empty-state p {
   font-size: 14px;
-  color: #64748B;
+  color: #a0aec0;
   margin: 0;
   max-width: 400px;
 }
@@ -1262,13 +1272,13 @@ const getSystemStatusText = () => {
 .page-title {
   font-size: 28px;
   font-weight: 600;
-  color: #1E293B;
+  color: #ffffff;
   margin-bottom: 8px;
 }
 
 .page-desc {
   font-size: 14px;
-  color: #64748B;
+  color: #a0aec0;
   margin-bottom: 12px;
 }
 
@@ -1290,16 +1300,16 @@ const getSystemStatusText = () => {
 }
 
 .stat {
-  background: #FFFFFF;
+  background: rgba(26, 35, 50, 0.6);
+  border: 1px solid rgba(76, 219, 189, 0.2);
   border-radius: 12px;
   padding: 20px;
   text-align: center;
-  box-shadow: 10px 10px 20px rgba(209, 217, 230, 0.4), -5px -5px 15px rgba(255, 255, 255, 0.8);
 }
 
 .stat-label {
   font-size: 11px;
-  color: #64748B;
+  color: #a0aec0;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 12px;
@@ -1309,11 +1319,11 @@ const getSystemStatusText = () => {
 .stat-value {
   font-size: 32px;
   font-weight: 700;
-  color: #2A4B7C;
+  color: #4cdbbd;
 }
 
 .stat-value.alarm {
-  color: #E11D48;
+  color: #ef4444;
 }
 
 .logs-actions {
@@ -1325,40 +1335,38 @@ const getSystemStatusText = () => {
 
 .btn-export {
   padding: 10px 20px;
-  background: #3B82F6;
-  border: none;
+  background: rgba(76, 219, 189, 0.2);
+  border: 1px solid #4cdbbd;
   border-radius: 8px;
-  color: #FFFFFF;
+  color: #4cdbbd;
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
   transition: all 0.3s ease;
   white-space: nowrap;
-  box-shadow: 5px 5px 15px rgba(59, 130, 246, 0.2);
 }
 
 .btn-export:hover {
-  background: #2563EB;
-  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+  background: rgba(76, 219, 189, 0.3);
+  box-shadow: 0 4px 12px rgba(76, 219, 189, 0.2);
 }
 
 .btn-clear {
   padding: 10px 20px;
-  background: #E11D48;
-  border: none;
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid #ef4444;
   border-radius: 8px;
-  color: #FFFFFF;
+  color: #ef4444;
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
   transition: all 0.3s ease;
   white-space: nowrap;
-  box-shadow: 5px 5px 15px rgba(225, 29, 72, 0.2);
 }
 
 .btn-clear:hover {
-  background: #BE185D;
-  box-shadow: 0 8px 20px rgba(225, 29, 72, 0.3);
+  background: rgba(239, 68, 68, 0.3);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
 }
 
 .filters {
@@ -1370,80 +1378,78 @@ const getSystemStatusText = () => {
 
 .filter-btn {
   padding: 8px 16px;
-  background: #FFFFFF;
-  border: 1.5px solid rgba(42, 75, 124, 0.2);
+  background: rgba(76, 219, 189, 0.1);
+  border: 1px solid rgba(76, 219, 189, 0.3);
   border-radius: 8px;
-  color: #64748B;
+  color: #a0aec0;
   cursor: pointer;
   font-size: 13px;
   font-weight: 500;
   transition: all 0.3s ease;
-  box-shadow: 5px 5px 10px rgba(209, 217, 230, 0.2);
 }
 
 .filter-btn:hover {
-  border-color: rgba(42, 75, 124, 0.4);
+  border-color: #4cdbbd;
+  color: #4cdbbd;
 }
 
 .filter-btn.active {
-  background: #2A4B7C;
-  color: #FFFFFF;
-  border-color: #2A4B7C;
+  background: #4cdbbd;
+  color: #0f1419;
+  border-color: #4cdbbd;
 }
 
 .logs-table {
   width: 100%;
   border-collapse: collapse;
-  background: #FFFFFF;
+  background: linear-gradient(135deg, rgba(26, 35, 50, 0.6) 0%, rgba(15, 20, 25, 0.6) 100%);
+  border: 1px solid rgba(76, 219, 189, 0.2);
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 10px 10px 20px rgba(209, 217, 230, 0.4), -5px -5px 15px rgba(255, 255, 255, 0.8);
 }
 
 .logs-table thead {
-  background: linear-gradient(135deg, #EAEFF5 0%, #F5F8FC 100%);
+  border-bottom: 1px solid rgba(76, 219, 189, 0.2);
 }
 
 .logs-table th {
   padding: 16px;
   text-align: left;
   font-size: 11px;
-  font-weight: 700;
-  color: #2A4B7C;
+  font-weight: 600;
+  color: #4cdbbd;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  border-bottom: 1.5px solid rgba(42, 75, 124, 0.15);
+  background: rgba(76, 219, 189, 0.05);
 }
 
 .logs-table td {
   padding: 14px 16px;
   font-size: 13px;
-  color: #1E293B;
-  border-bottom: 1px solid rgba(42, 75, 124, 0.08);
+  color: #cbd5e0;
+  border-bottom: 1px solid rgba(76, 219, 189, 0.1);
 }
 
 .logs-table tbody tr:hover {
-  background: rgba(42, 75, 124, 0.03);
+  background: rgba(76, 219, 189, 0.05);
 }
 
 .badge {
   display: inline-block;
-  padding: 6px 14px;
-  border-radius: 6px;
+  padding: 4px 12px;
+  border-radius: 12px;
   font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
+  font-weight: 600;
 }
 
 .badge-normal {
-  background: rgba(16, 185, 129, 0.2);
-  color: #10B981;
+  background: rgba(76, 219, 189, 0.2);
+  color: #4cdbbd;
 }
 
 .badge-alarm {
-  background: rgba(225, 29, 72, 0.2);
-  color: #E11D48;
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
 }
 
 /* Thresholds View */
@@ -1455,40 +1461,38 @@ const getSystemStatusText = () => {
 }
 
 .threshold-box {
-  background: #FFFFFF;
+  background: linear-gradient(135deg, rgba(26, 35, 50, 0.8) 0%, rgba(15, 20, 25, 0.8) 100%);
+  border: 1px solid rgba(76, 219, 189, 0.2);
   border-radius: 16px;
-  padding: 32px;
-  box-shadow: 10px 10px 20px rgba(209, 217, 230, 0.5), -5px -5px 15px rgba(255, 255, 255, 0.8);
+  padding: 30px;
 }
 
 .threshold-title {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 600;
-  color: #1E293B;
+  color: #ffffff;
   margin-bottom: 8px;
 }
 
 .threshold-desc {
-  font-size: 14px;
-  color: #64748B;
-  margin-bottom: 24px;
+  font-size: 13px;
+  color: #a0aec0;
+  margin-bottom: 25px;
 }
 
 .threshold-actions {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  margin-bottom: 28px;
-  padding-bottom: 20px;
-  border-bottom: 1.5px solid rgba(42, 75, 124, 0.1);
+  margin-bottom: 25px;
 }
 
 .btn-reset {
-  padding: 10px 24px;
-  background: rgba(42, 75, 124, 0.1);
-  border: 1.5px solid rgba(42, 75, 124, 0.3);
-  border-radius: 8px;
-  color: #2A4B7C;
+  padding: 10px 20px;
+  background: rgba(76, 219, 189, 0.1);
+  border: 1px solid rgba(76, 219, 189, 0.5);
+  border-radius: 6px;
+  color: #4cdbbd;
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
@@ -1496,86 +1500,81 @@ const getSystemStatusText = () => {
 }
 
 .btn-reset:hover {
-  background: rgba(42, 75, 124, 0.15);
-  border-color: #2A4B7C;
+  background: rgba(76, 219, 189, 0.2);
 }
 
 .btn-save {
-  padding: 10px 24px;
-  background: #10B981;
+  padding: 10px 20px;
+  background: #4cdbbd;
   border: none;
-  border-radius: 8px;
-  color: #FFFFFF;
+  border-radius: 6px;
+  color: #0f1419;
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
   transition: all 0.3s ease;
-  box-shadow: 5px 5px 15px rgba(16, 185, 129, 0.2);
 }
 
 .btn-save:hover {
-  background: #059669;
-  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+  background: #3ac9ad;
+  box-shadow: 0 5px 15px rgba(76, 219, 189, 0.3);
 }
 
 .threshold-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 20px;
 }
 
 .threshold-item {
-  background: linear-gradient(135deg, #EAEFF5 0%, #F5F8FC 100%);
-  border: 1.5px solid rgba(42, 75, 124, 0.1);
-  border-radius: 12px;
-  padding: 20px;
+  background: rgba(26, 35, 50, 0.6);
+  border: 1px solid rgba(76, 219, 189, 0.15);
+  border-radius: 8px;
+  padding: 16px;
 }
 
 .threshold-label {
   font-size: 13px;
-  color: #1E293B;
-  margin-bottom: 16px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  color: #a0aec0;
+  margin-bottom: 12px;
+  font-weight: 600;
+  text-transform: capitalize;
 }
 
 .threshold-fields {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
 }
 
 .field label {
   font-size: 10px;
-  color: #64748B;
+  color: #718096;
   text-transform: uppercase;
   letter-spacing: 0.4px;
-  font-weight: 700;
+  margin-bottom: 4px;
+  font-weight: 600;
 }
 
 .field input {
   padding: 8px 12px;
-  background: #FFFFFF;
-  border: 1.5px solid rgba(42, 75, 124, 0.15);
-  border-radius: 6px;
-  color: #1E293B;
+  background: rgba(15, 20, 25, 0.6);
+  border: 1px solid rgba(76, 219, 189, 0.2);
+  border-radius: 4px;
+  color: #ffffff;
   font-size: 13px;
-  font-weight: 500;
   transition: all 0.3s ease;
 }
 
 .field input:focus {
   outline: none;
-  border-color: #2A4B7C;
-  box-shadow: 0 0 0 3px rgba(42, 75, 124, 0.1);
-  background: #FAFBFC;
+  border-color: #4cdbbd;
+  box-shadow: 0 0 0 2px rgba(76, 219, 189, 0.1);
 }
 
 @media (max-width: 1200px) {
