@@ -345,9 +345,16 @@ const getSystemStatusText = () => {
               <h2 class="view-title">{{ systems[selectedSystem]?.name }}</h2>
               <p class="view-desc">{{ systems[selectedSystem]?.fullDesc }}</p>
             </div>
-            <div class="mode-indicator" :class="{ active: activeTab === 'control' }">
-              {{ activeTab === 'monitoring' ? '📊 MONITORING' : '🎛️ CONTROL' }}
-            </div>
+            <button
+              class="mode-switcher"
+              :class="{ active: activeTab === 'control' }"
+              @click="activeTab = activeTab === 'monitoring' ? 'control' : 'monitoring'"
+              :title="`Click to switch to ${activeTab === 'monitoring' ? 'Control' : 'Monitoring'} Mode`"
+            >
+              <span v-if="activeTab === 'monitoring'" class="mode-icon">📊</span>
+              <span v-else class="mode-icon">🎛️</span>
+              <span class="mode-text">{{ activeTab === 'monitoring' ? 'MONITORING' : 'CONTROL' }}</span>
+            </button>
           </div>
 
           <!-- Power Meter Panel (Main Display) -->
@@ -501,24 +508,6 @@ const getSystemStatusText = () => {
               </div>
               <div v-else class="control-disabled">Monitoring Mode - Control Disabled</div>
             </div>
-          </div>
-
-          <!-- Mode Toggle -->
-          <div class="mode-toggle">
-            <button
-              class="mode-btn"
-              :class="{ active: activeTab === 'monitoring' }"
-              @click="activeTab = 'monitoring'"
-            >
-              📊 Monitoring Mode
-            </button>
-            <button
-              class="mode-btn"
-              :class="{ active: activeTab === 'control' }"
-              @click="activeTab = 'control'"
-            >
-              🎛️ Control Mode
-            </button>
           </div>
         </div>
 
@@ -853,19 +842,49 @@ const getSystemStatusText = () => {
   margin: 0;
 }
 
-.mode-indicator {
-  padding: 8px 16px;
+/* Mode Switcher - Top Right */
+.mode-switcher {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
   background: rgba(76, 219, 189, 0.15);
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 600;
+  border: 1.5px solid rgba(76, 219, 189, 0.3);
+  border-radius: 10px;
   color: #a0aec0;
+  font-size: 13px;
+  font-weight: 700;
   letter-spacing: 0.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
 }
 
-.mode-indicator.active {
-  background: rgba(76, 219, 189, 0.2);
+.mode-switcher:hover {
+  background: rgba(76, 219, 189, 0.25);
+  border-color: #4cdbbd;
   color: #4cdbbd;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(76, 219, 189, 0.2);
+}
+
+.mode-switcher.active {
+  background: rgba(76, 219, 189, 0.25);
+  border-color: #4cdbbd;
+  color: #4cdbbd;
+  box-shadow: 0 4px 12px rgba(76, 219, 189, 0.2);
+}
+
+.mode-icon {
+  font-size: 16px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.mode-text {
+  display: inline;
 }
 
 /* Power Meter Panel */
@@ -1197,38 +1216,6 @@ const getSystemStatusText = () => {
   font-size: 12px;
   font-weight: 600;
   text-align: center;
-}
-
-/* Mode Toggle */
-.mode-toggle {
-  display: flex;
-  gap: 12px;
-  margin-top: 16px;
-}
-
-.mode-btn {
-  flex: 1;
-  padding: 12px 20px;
-  background: rgba(76, 219, 189, 0.1);
-  border: 1.5px solid rgba(76, 219, 189, 0.3);
-  border-radius: 8px;
-  color: #a0aec0;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-}
-
-.mode-btn:hover {
-  background: rgba(76, 219, 189, 0.15);
-  border-color: #4cdbbd;
-}
-
-.mode-btn.active {
-  background: rgba(76, 219, 189, 0.2);
-  border-color: #4cdbbd;
-  color: #4cdbbd;
-  box-shadow: 0 4px 12px rgba(76, 219, 189, 0.2);
 }
 
 /* Empty State */
