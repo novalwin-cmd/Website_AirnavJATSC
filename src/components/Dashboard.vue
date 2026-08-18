@@ -283,8 +283,14 @@ const getSystemStatusText = () => {
     <!-- Header -->
     <div class="header-top">
       <div class="header-left">
-        <div class="header-brand">AIRNAV</div>
-        <div class="header-title">HMI Power Monitoring System</div>
+        <div class="header-brand">
+          <div class="brand-logo">⚡</div>
+          <div class="brand-info">
+            <div class="brand-main">AMC</div>
+            <div class="brand-sub">AirNav Monitoring & Control</div>
+          </div>
+        </div>
+        <div class="header-title">Real-Time HMI Power Management System</div>
       </div>
       <div class="header-right">
         <button class="header-btn" @click="toggleSound" title="Toggle alarm sound">
@@ -299,6 +305,7 @@ const getSystemStatusText = () => {
     <div class="hmi-container">
       <!-- Left Sidebar Navigation -->
       <div class="sidebar">
+        <div class="sidebar-brand">⚡ AMC</div>
         <div class="sidebar-title">Systems</div>
         <div class="nav-buttons">
           <button
@@ -638,21 +645,49 @@ const getSystemStatusText = () => {
 .header-left {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .header-brand {
-  font-size: 11px;
-  letter-spacing: 2.5px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-logo {
+  font-size: 24px;
+  font-weight: 900;
+  color: #4cdbbd;
+  letter-spacing: -2px;
+}
+
+.brand-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.brand-main {
+  font-size: 14px;
+  letter-spacing: 1.5px;
   color: #4cdbbd;
   text-transform: uppercase;
-  font-weight: 700;
+  font-weight: 800;
+}
+
+.brand-sub {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: #a0aec0;
+  text-transform: uppercase;
+  font-weight: 600;
 }
 
 .header-title {
-  font-size: 20px;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: 700;
   color: #ffffff;
+  letter-spacing: 0.5px;
 }
 
 .header-right {
@@ -718,16 +753,33 @@ const getSystemStatusText = () => {
   width: 200px;
   background: linear-gradient(180deg, #1a2332 0%, #0f1419 100%);
   border-right: 2px solid rgba(76, 219, 189, 0.15);
-  padding: 24px 16px;
+  padding: 20px 16px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: rgba(76, 219, 189, 0.1);
+  border: 1px solid rgba(76, 219, 189, 0.2);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 800;
+  color: #4cdbbd;
+  text-align: center;
+  justify-content: center;
+  letter-spacing: 1px;
+  text-transform: uppercase;
 }
 
 .sidebar-title {
-  font-size: 12px;
-  letter-spacing: 1px;
+  font-size: 11px;
+  letter-spacing: 1.5px;
   color: #4cdbbd;
   text-transform: uppercase;
   font-weight: 700;
