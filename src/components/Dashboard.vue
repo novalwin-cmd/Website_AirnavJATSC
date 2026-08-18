@@ -106,6 +106,10 @@ const isAdmin = computed(() => props.user === 'admin')
 
 // Sample real-time data with some exceeding thresholds
 const sampleData = ref({
+  'dse1-a': { voltage: 228, current: 42, frequency: 50.2, temp: 28.5, power: 18.5 },
+  'dse1-b': { voltage: 230, current: 40, frequency: 50.1, temp: 27.2, power: 17.8 },
+  'dse2-a': { voltage: 232, current: 45, frequency: 50.3, temp: 29.1, power: 20.2 },
+  'dse2-b': { voltage: 235, current: 48, frequency: 50.6, temp: 31.5, power: 24.0 }, // ALARM: Frequency HIGH, Temp HIGH
   'panel1-a': { voltage: 245, current: 55, frequency: 50.8, temp: 32, power: 25 }, // ALARM: Voltage HIGH
   'panel1-b': { voltage: 190, current: 42, frequency: 49.2, temp: 28, power: 22 }, // ALARM: Voltage LOW, Frequency LOW
   'panel2-a': { voltage: 220, current: 42, frequency: 50.5, temp: 27, power: 20 }, // NORMAL
@@ -250,302 +254,370 @@ const toggleSound = () => {
   soundEnabled.value = !soundEnabled.value
 }
 
-// Simple test function
-const testClick = () => {
-  alert('Button works!')
-  console.log('Button clicked!')
+// Get system status based on thresholds
+const getSystemStatus = () => {
+  if (!selectedSystem.value) return 'normal'
+
+  const data = sampleData.value[selectedSystem.value + '-a']
+  if (!data) return 'normal'
+
+  // Check if any metric exceeds thresholds
+  if (data.voltage > thresholds.voltage.high || data.voltage < thresholds.voltage.low) return 'critical'
+  if (data.current > thresholds.current.high) return 'critical'
+  if (data.temp > thresholds.temp.high) return 'critical'
+  if (data.frequency > thresholds.frequency.high || data.frequency < thresholds.frequency.low) return 'warning'
+
+  return 'normal'
+}
+
+const getSystemStatusText = () => {
+  const status = getSystemStatus()
+  if (status === 'critical') return '🔴 CRITICAL'
+  if (status === 'warning') return '🟡 WARNING'
+  return '🟢 NORMAL'
 }
 </script>
 
 <template>
-  <div class="dashboard">
+  <div class="dashboard-hmi">
     <!-- Header -->
-    <div class="header">
+    <div class="header-top">
       <div class="header-left">
         <div class="header-brand">AIRNAV</div>
-        <div class="header-title">Monitoring dan Kontrol Panel Room</div>
-        <div class="header-desc">Pilih ruangan atau sistem yang ingin dipantau. Mode monitoring dan kontrol berlaku untuk seluruh sistem.</div>
+        <div class="header-title">HMI Power Monitoring System</div>
       </div>
       <div class="header-right">
-        <button class="header-btn" @click="toggleSound">
+        <button class="header-btn" @click="toggleSound" title="Toggle alarm sound">
           {{ soundEnabled ? '🔊 Sound enabled' : '🔇 Sound disabled' }}
         </button>
-        <button class="header-btn logout" @click="$emit('logout')">Log out</button>
         <div class="user-status">Signed in as <strong>{{ user }}</strong></div>
+        <button class="header-btn logout" @click="$emit('logout')">Log out</button>
       </div>
     </div>
 
-    <!-- Main Tabs (only on main and detail views) -->
-    <div v-if="currentView === 'main' || currentView === 'detail'" class="tabs">
-      <button class="tab" :class="{ active: activeTab === 'monitoring' }" @click="activeTab = 'monitoring'">
-        Monitoring Mode
-      </button>
-      <button class="tab" :class="{ active: activeTab === 'control' }" @click="activeTab = 'control'">
-        Control Mode
-      </button>
-      <div class="tab-spacer"></div>
-      <button class="tab-button" @click="goToLogs">Logs</button>
-      <button class="tab-button" @click="goToThresholds">Thresholds</button>
-    </div>
+    <!-- Main Layout: Sidebar + Content -->
+    <div class="hmi-container">
+      <!-- Left Sidebar Navigation -->
+      <div class="sidebar">
+        <div class="sidebar-title">Systems</div>
+        <div class="nav-buttons">
+          <button
+            v-for="(system, key) in systems"
+            :key="key"
+            class="nav-btn"
+            :class="{ active: selectedSystem === key }"
+            @click="selectSystem(key)"
+          >
+            <span class="nav-icon">{{ system.icon }}</span>
+            <span class="nav-label">{{ system.name }}</span>
+          </button>
+        </div>
 
-    <!-- Detail View Header (for logs/thresholds) -->
-    <div v-if="currentView === 'logs' || currentView === 'thresholds'" class="detail-header-bar">
-      <button class="back-menu" @click="backToMain">← Menu utama</button>
-      <div class="spacer"></div>
-      <button class="detail-nav-btn" :class="{ active: true }">{{ currentView === 'logs' ? 'Monitoring mode' : 'Monitoring mode' }}</button>
-      <div class="user-status-detail">Signed in as <strong>{{ user }}</strong></div>
-      <button class="header-btn logout" @click="$emit('logout')">Log out</button>
-    </div>
+        <div class="sidebar-divider"></div>
 
-    <!-- Content -->
-    <div class="content">
-      <!-- Main Menu -->
-      <div v-if="currentView === 'main'" class="systems-grid">
-        <div v-for="(system, key) in systems" :key="key" class="system-card" @click="selectSystem(key)">
-          <div class="card-icon">{{ system.icon }}</div>
-          <div class="card-title">{{ system.name }}</div>
-          <div class="card-description">{{ system.description }}</div>
+        <div class="sidebar-section">
+          <div class="sidebar-label">Menu</div>
+          <button
+            class="nav-btn"
+            :class="{ active: currentView === 'logs' }"
+            @click="goToLogs"
+          >
+            <span class="nav-icon">📋</span>
+            <span class="nav-label">Logs</span>
+          </button>
+          <button
+            class="nav-btn"
+            :class="{ active: currentView === 'thresholds' }"
+            @click="goToThresholds"
+          >
+            <span class="nav-icon">⚙️</span>
+            <span class="nav-label">Thresholds</span>
+          </button>
         </div>
       </div>
 
-      <!-- Detail View -->
-      <div v-if="currentView === 'detail'" class="detail-view">
-        <button class="back-button" @click="backToMain">← Menu utama</button>
+      <!-- Main Content Area -->
+      <div class="main-content">
+        <!-- Detail View (Monitoring) -->
+        <div v-if="currentView === 'detail' && selectedSystem" class="monitoring-view">
+          <div class="view-header">
+            <div>
+              <h2 class="view-title">{{ systems[selectedSystem]?.name }}</h2>
+              <p class="view-desc">{{ systems[selectedSystem]?.fullDesc }}</p>
+            </div>
+            <div class="mode-indicator" :class="{ active: activeTab === 'control' }">
+              {{ activeTab === 'monitoring' ? '📊 MONITORING' : '🎛️ CONTROL' }}
+            </div>
+          </div>
 
-        <div class="detail-header">
-          <h2 class="detail-title">{{ systems[selectedSystem]?.name }}</h2>
-          <p class="detail-desc">{{ systems[selectedSystem]?.fullDesc }}</p>
-        </div>
+          <!-- Power Meter Panel (Main Display) -->
+          <div class="power-meter-panel">
+            <div class="power-meter-header">
+              <h3>Power Meter</h3>
+              <div class="status-badge" :class="getSystemStatus()">{{ getSystemStatusText() }}</div>
+            </div>
 
-        <!-- Temperature Card -->
-        <div class="temp-card">
-          <div class="temp-icon">🌡️</div>
-          <div class="temp-label">Temperature</div>
-          <div class="temp-value">29.3°C</div>
-          <div class="temp-chart"></div>
-        </div>
-
-        <!-- System Panels -->
-        <div class="panels-grid">
-          <div class="panel">
-            <div class="panel-header">
-              <div class="panel-title">{{ systems[selectedSystem]?.name }} A</div>
-              <div class="panel-actions">
-                <button class="btn-logs" @click="checkThresholds">Check Alert</button>
-                <button class="btn-open">Open</button>
+            <div class="meter-display">
+              <div class="meter-item">
+                <div class="meter-label">Power</div>
+                <div class="meter-value">{{ sampleData[selectedSystem + '-a']?.power || 0 }}kW</div>
+                <div class="meter-icon">⚡</div>
+              </div>
+              <div class="meter-item">
+                <div class="meter-label">Voltage</div>
+                <div class="meter-value">{{ sampleData[selectedSystem + '-a']?.voltage || 0 }}V</div>
+                <div class="meter-icon">⚙️</div>
+              </div>
+              <div class="meter-item">
+                <div class="meter-label">Current</div>
+                <div class="meter-value">{{ sampleData[selectedSystem + '-a']?.current || 0 }}A</div>
+                <div class="meter-icon">🔌</div>
+              </div>
+              <div class="meter-item">
+                <div class="meter-label">Frequency</div>
+                <div class="meter-value">{{ sampleData[selectedSystem + '-a']?.frequency || 0 }}Hz</div>
+                <div class="meter-icon">◿</div>
               </div>
             </div>
-            <div class="panel-info">ABB M1M 20</div>
-            <div class="metrics-row">
-              <div class="metric">
-                <div class="metric-icon">⚡</div>
-                <div class="metric-label">Voltage</div>
-                <div class="metric-value">230V</div>
-                <div class="metric-line"></div>
-              </div>
-              <div class="metric">
-                <div class="metric-icon">⚡</div>
-                <div class="metric-label">Current</div>
-                <div class="metric-value">45A</div>
-                <div class="metric-line"></div>
-              </div>
-              <div class="metric">
-                <div class="metric-icon">◿</div>
-                <div class="metric-label">Frequency</div>
-                <div class="metric-value">50.4Hz</div>
-                <div class="metric-line"></div>
-              </div>
+          </div>
+
+          <!-- ACB Control Panel -->
+          <div class="acb-control-panel">
+            <div class="acb-header">
+              <h3>ACB Control & Status</h3>
+              <button class="btn-check-alert" @click="checkThresholds">⚠️ Check Thresholds</button>
             </div>
-            <div class="metrics-row">
-              <div class="metric">
-                <div class="metric-icon">🔌</div>
-                <div class="metric-label">Power Factor</div>
-                <div class="metric-value">0.87</div>
-                <div class="metric-line"></div>
-              </div>
-              <div class="metric">
-                <div class="metric-icon">⚡</div>
-                <div class="metric-label">Power</div>
-                <div class="metric-value">23.8kW</div>
-                <div class="metric-line"></div>
-              </div>
-            </div>
-            <div class="control-section">
-              <div class="control-header">
-                <div class="control-title">ACB Control</div>
+
+            <!-- ACB Channel A -->
+            <div class="acb-channel">
+              <div class="channel-info">
+                <div class="channel-name">Channel A - ABB M1M 20</div>
                 <div class="acb-status" :class="`status-${acbStatus[selectedSystem + '-a']?.toLowerCase()}`">
                   {{ acbStatus[selectedSystem + '-a'] }}
                 </div>
               </div>
-              <div v-if="isAdmin" class="control-buttons">
-                <button type="button" class="btn-control btn-control-open" @click="controlACB('open', selectedSystem + '-a')">Open</button>
-                <button type="button" class="btn-control btn-control-trip" @click="controlACB('trip', selectedSystem + '-a')">Trip</button>
-                <button type="button" class="btn-control btn-control-close" @click="controlACB('close', selectedSystem + '-a')">Close</button>
-              </div>
-              <div v-else class="permission-notice">
-                ⚠️ Only Admin can control ACB
-              </div>
-            </div>
-          </div>
 
-          <div class="panel">
-            <div class="panel-header">
-              <div class="panel-title">{{ systems[selectedSystem]?.name }} B</div>
-              <div class="panel-actions">
-                <button class="btn-logs" @click="checkThresholds">Check Alert</button>
-                <button class="btn-open">Open</button>
+              <div class="channel-metrics">
+                <div class="metric-card">
+                  <span class="metric-label">Voltage</span>
+                  <span class="metric-value">{{ sampleData[selectedSystem + '-a']?.voltage }}V</span>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Current</span>
+                  <span class="metric-value">{{ sampleData[selectedSystem + '-a']?.current }}A</span>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Power Factor</span>
+                  <span class="metric-value">{{ (Math.random() * 0.3 + 0.75).toFixed(2) }}</span>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Frequency</span>
+                  <span class="metric-value">{{ sampleData[selectedSystem + '-a']?.frequency }}Hz</span>
+                </div>
               </div>
+
+              <div v-if="activeTab === 'control'" class="control-buttons">
+                <button
+                  v-if="isAdmin"
+                  class="btn-acb btn-acb-open"
+                  @click="controlACB('open', selectedSystem + '-a')"
+                  :disabled="acbStatus[selectedSystem + '-a'] === 'OPEN'"
+                >
+                  Open
+                </button>
+                <button
+                  v-if="isAdmin"
+                  class="btn-acb btn-acb-trip"
+                  @click="controlACB('trip', selectedSystem + '-a')"
+                >
+                  Trip
+                </button>
+                <button
+                  v-if="isAdmin"
+                  class="btn-acb btn-acb-close"
+                  @click="controlACB('close', selectedSystem + '-a')"
+                  :disabled="acbStatus[selectedSystem + '-a'] === 'CLOSED'"
+                >
+                  Close
+                </button>
+                <div v-if="!isAdmin" class="permission-notice">Only Admin can control ACB</div>
+              </div>
+              <div v-else class="control-disabled">Monitoring Mode - Control Disabled</div>
             </div>
-            <div class="panel-info">ABB M1M 20</div>
-            <div class="metrics-row">
-              <div class="metric">
-                <div class="metric-icon">⚡</div>
-                <div class="metric-label">Voltage</div>
-                <div class="metric-value">231V</div>
-                <div class="metric-line"></div>
-              </div>
-              <div class="metric">
-                <div class="metric-icon">⚡</div>
-                <div class="metric-label">Current</div>
-                <div class="metric-value">48A</div>
-                <div class="metric-line"></div>
-              </div>
-              <div class="metric">
-                <div class="metric-icon">◿</div>
-                <div class="metric-label">Frequency</div>
-                <div class="metric-value">50.3Hz</div>
-                <div class="metric-line"></div>
-              </div>
-            </div>
-            <div class="metrics-row">
-              <div class="metric">
-                <div class="metric-icon">🔌</div>
-                <div class="metric-label">Power Factor</div>
-                <div class="metric-value">0.90</div>
-                <div class="metric-line"></div>
-              </div>
-              <div class="metric">
-                <div class="metric-icon">⚡</div>
-                <div class="metric-label">Power</div>
-                <div class="metric-value">25.3kW</div>
-                <div class="metric-line"></div>
-              </div>
-            </div>
-            <div class="control-section">
-              <div class="control-header">
-                <div class="control-title">ACB Control</div>
+
+            <!-- ACB Channel B -->
+            <div class="acb-channel">
+              <div class="channel-info">
+                <div class="channel-name">Channel B - ABB M1M 20</div>
                 <div class="acb-status" :class="`status-${acbStatus[selectedSystem + '-b']?.toLowerCase()}`">
                   {{ acbStatus[selectedSystem + '-b'] }}
                 </div>
               </div>
-              <div v-if="isAdmin" class="control-buttons">
-                <button class="btn-control btn-control-open" @click="controlACB('open', selectedSystem + '-b')">Open</button>
-                <button class="btn-control btn-control-trip" @click="controlACB('trip', selectedSystem + '-b')">Trip</button>
-                <button class="btn-control btn-control-close" @click="controlACB('close', selectedSystem + '-b')">Close</button>
+
+              <div class="channel-metrics">
+                <div class="metric-card">
+                  <span class="metric-label">Voltage</span>
+                  <span class="metric-value">{{ sampleData[selectedSystem + '-b']?.voltage }}V</span>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Current</span>
+                  <span class="metric-value">{{ sampleData[selectedSystem + '-b']?.current }}A</span>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Power Factor</span>
+                  <span class="metric-value">{{ (Math.random() * 0.3 + 0.75).toFixed(2) }}</span>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Frequency</span>
+                  <span class="metric-value">{{ sampleData[selectedSystem + '-b']?.frequency }}Hz</span>
+                </div>
               </div>
-              <div v-else class="permission-notice">
-                ⚠️ Only Admin can control ACB
+
+              <div v-if="activeTab === 'control'" class="control-buttons">
+                <button
+                  v-if="isAdmin"
+                  class="btn-acb btn-acb-open"
+                  @click="controlACB('open', selectedSystem + '-b')"
+                  :disabled="acbStatus[selectedSystem + '-b'] === 'OPEN'"
+                >
+                  Open
+                </button>
+                <button
+                  v-if="isAdmin"
+                  class="btn-acb btn-acb-trip"
+                  @click="controlACB('trip', selectedSystem + '-b')"
+                >
+                  Trip
+                </button>
+                <button
+                  v-if="isAdmin"
+                  class="btn-acb btn-acb-close"
+                  @click="controlACB('close', selectedSystem + '-b')"
+                  :disabled="acbStatus[selectedSystem + '-b'] === 'CLOSED'"
+                >
+                  Close
+                </button>
+                <div v-if="!isAdmin" class="permission-notice">Only Admin can control ACB</div>
+              </div>
+              <div v-else class="control-disabled">Monitoring Mode - Control Disabled</div>
+            </div>
+          </div>
+
+          <!-- Mode Toggle -->
+          <div class="mode-toggle">
+            <button
+              class="mode-btn"
+              :class="{ active: activeTab === 'monitoring' }"
+              @click="activeTab = 'monitoring'"
+            >
+              📊 Monitoring Mode
+            </button>
+            <button
+              class="mode-btn"
+              :class="{ active: activeTab === 'control' }"
+              @click="activeTab = 'control'"
+            >
+              🎛️ Control Mode
+            </button>
+          </div>
+        </div>
+
+        <!-- Logs View -->
+        <div v-if="currentView === 'logs'" class="logs-view">
+          <h2 class="page-title">System Logs</h2>
+          <p class="page-desc">Centralized log history of all systems and events</p>
+
+          <div class="logs-header">
+            <div class="stats-row">
+              <div class="stat">
+                <div class="stat-label">TOTAL ENTRIES</div>
+                <div class="stat-value">{{ logStats.total }}</div>
+              </div>
+              <div class="stat">
+                <div class="stat-label">ALARMS</div>
+                <div class="stat-value alarm">{{ logStats.alarms }}</div>
+              </div>
+              <div class="stat">
+                <div class="stat-label">NORMAL</div>
+                <div class="stat-value">{{ logStats.normal }}</div>
+              </div>
+              <div class="stat">
+                <div class="stat-label">SYSTEMS AFFECTED</div>
+                <div class="stat-value">{{ logStats.rooms }}</div>
+              </div>
+            </div>
+
+            <div class="logs-actions">
+              <button class="btn-export" @click="exportCSV">Export CSV</button>
+              <button class="btn-export" @click="exportExcel">Export Excel</button>
+              <button class="btn-clear" @click="clearLogs">Clear Logs</button>
+            </div>
+          </div>
+
+          <div class="filters">
+            <button class="filter-btn" :class="{ active: logFilter === 'all' }" @click="logFilter = 'all'">All</button>
+            <button class="filter-btn" :class="{ active: logFilter === 'alarms' }" @click="logFilter = 'alarms'">Alarms</button>
+            <button class="filter-btn" :class="{ active: logFilter === 'normal' }" @click="logFilter = 'normal'">Normal</button>
+          </div>
+
+          <table class="logs-table">
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>System</th>
+                <th>Status</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(log, idx) in filteredLogs" :key="idx">
+                <td>{{ log.time }}</td>
+                <td>{{ log.room }}</td>
+                <td><span class="badge" :class="log.status === 'Normal' ? 'badge-normal' : 'badge-alarm'">{{ log.status }}</span></td>
+                <td>{{ log.detail }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Thresholds View -->
+        <div v-if="currentView === 'thresholds'" class="thresholds-view">
+          <div class="threshold-box">
+            <h2 class="threshold-title">Threshold Configuration</h2>
+            <p class="threshold-desc">Edit alarm thresholds for system metrics</p>
+
+            <div class="threshold-actions">
+              <button class="btn-reset" @click="resetThresholds">Reset to Defaults</button>
+              <button class="btn-save" @click="saveThresholds">Save Changes</button>
+            </div>
+
+            <div class="threshold-grid">
+              <div v-for="(values, key) in thresholds" :key="key" class="threshold-item">
+                <div class="threshold-label">{{ key.toUpperCase() }}</div>
+                <div class="threshold-fields">
+                  <div class="field">
+                    <label>Low</label>
+                    <input v-model.number="values.low" type="number" step="0.1">
+                  </div>
+                  <div class="field">
+                    <label>Base</label>
+                    <input v-model.number="values.base" type="number" step="0.1">
+                  </div>
+                  <div class="field">
+                    <label>High</label>
+                    <input v-model.number="values.high" type="number" step="0.1">
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Logs View -->
-      <div v-if="currentView === 'logs'" class="logs-view">
-        <h2 class="page-title">Log Terpusat</h2>
-        <p class="page-desc">Riwayat gabungan seluruh ruangan — bisa difilter, diekspor, dan dibersihkan.</p>
-
-        <div class="logs-header">
-          <div class="stats-row">
-            <div class="stat">
-              <div class="stat-label">TOTAL ENTRI</div>
-              <div class="stat-value">{{ logStats.total }}</div>
-            </div>
-            <div class="stat">
-              <div class="stat-label">ALARM</div>
-              <div class="stat-value alarm">{{ logStats.alarms }}</div>
-            </div>
-            <div class="stat">
-              <div class="stat-label">NORMAL</div>
-              <div class="stat-value">{{ logStats.normal }}</div>
-            </div>
-            <div class="stat">
-              <div class="stat-label">RUANGAN TERDAMPAK</div>
-              <div class="stat-value">{{ logStats.rooms }}</div>
-            </div>
-          </div>
-
-          <div class="logs-actions">
-            <button class="btn-export" @click="exportCSV">Export CSV</button>
-            <button class="btn-export" @click="exportExcel">Export Excel</button>
-            <button class="btn-clear" @click="clearLogs">Clear log</button>
-          </div>
-        </div>
-
-        <div class="filters">
-          <button class="filter-btn" :class="{ active: logFilter === 'all' }" @click="logFilter = 'all'">All</button>
-          <button class="filter-btn" :class="{ active: logFilter === 'alarms' }" @click="logFilter = 'alarms'">Alarms</button>
-          <button class="filter-btn" :class="{ active: logFilter === 'normal' }" @click="logFilter = 'normal'">Normal</button>
-          <select class="filter-select">
-            <option>Semua ruangan</option>
-            <option>DSE 1</option>
-            <option>DSE 2</option>
-            <option>Panel 1</option>
-            <option>Panel 2</option>
-          </select>
-        </div>
-
-        <table class="logs-table">
-          <thead>
-            <tr>
-              <th>Waktu</th>
-              <th>Ruangan</th>
-              <th>Status</th>
-              <th>Detail</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(log, idx) in filteredLogs" :key="idx">
-              <td>{{ log.time }}</td>
-              <td>{{ log.room }}</td>
-              <td><span class="badge" :class="log.status === 'Normal' ? 'badge-normal' : 'badge-alarm'">{{ log.status }}</span></td>
-              <td>{{ log.detail }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Thresholds View -->
-      <div v-if="currentView === 'thresholds'" class="thresholds-view">
-        <div class="threshold-box">
-          <h2 class="threshold-title">Threshold editor</h2>
-          <p class="threshold-desc">Edit alarm thresholds for metrics. Changes are stored locally.</p>
-
-          <div class="threshold-actions">
-            <button class="btn-reset" @click="resetThresholds">Reset</button>
-            <button class="btn-save" @click="saveThresholds">Save</button>
-          </div>
-
-          <div class="threshold-grid">
-            <div v-for="(values, key) in thresholds" :key="key" class="threshold-item">
-              <div class="threshold-label">{{ key.charAt(0).toUpperCase() + key.slice(1) }}</div>
-              <div class="threshold-fields">
-                <div class="field">
-                  <label>Base</label>
-                  <input v-model.number="values.base" type="number" step="0.1">
-                </div>
-                <div class="field">
-                  <label>Low</label>
-                  <input v-model.number="values.low" type="number" step="0.1">
-                </div>
-                <div class="field">
-                  <label>High</label>
-                  <input v-model.number="values.high" type="number" step="0.1">
-                </div>
-              </div>
-            </div>
-          </div>
+        <!-- Default: Select a System -->
+        <div v-if="!selectedSystem && currentView === 'detail'" class="empty-state">
+          <div class="empty-icon">🖥️</div>
+          <h2>Select a System to Monitor</h2>
+          <p>Choose a system from the left sidebar to begin monitoring and control operations</p>
         </div>
       </div>
     </div>
@@ -553,57 +625,51 @@ const testClick = () => {
 </template>
 
 <style scoped>
-.dashboard {
+.dashboard-hmi {
   width: 100%;
   min-height: 100vh;
-  background: #0f1419;
+  background: #2B4C7E;
   display: flex;
   flex-direction: column;
+  font-family: 'Inter', 'Roboto', system-ui, sans-serif;
 }
 
 /* Header */
-.header {
-  background: linear-gradient(135deg, #0f1419 0%, #1a2332 100%);
-  border-bottom: 1px solid rgba(76, 219, 189, 0.2);
-  padding: 20px 40px;
+.header-top {
+  background: #2A4B7C;
+  border-bottom: 2px solid rgba(234, 239, 245, 0.2);
+  padding: 16px 32px;
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 40px;
+  align-items: center;
+  gap: 32px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .header-left {
-  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .header-brand {
   font-size: 11px;
-  letter-spacing: 2px;
-  color: #4cdbbd;
+  letter-spacing: 2.5px;
+  color: #FFFFFF;
   text-transform: uppercase;
-  margin-bottom: 8px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .header-title {
-  font-size: 28px;
+  font-size: 20px;
   font-weight: 600;
-  color: #ffffff;
-  margin-bottom: 8px;
-}
-
-.header-desc {
-  font-size: 13px;
-  color: #a0aec0;
-  line-height: 1.5;
+  color: #EAEFF5;
 }
 
 .header-right {
   display: flex;
   align-items: center;
-  gap: 12px;
-  flex-direction: column;
-  align-items: flex-end;
+  gap: 20px;
 }
 
 .header-btn {
@@ -648,386 +714,368 @@ const testClick = () => {
   color: #ffffff;
 }
 
-/* Tabs */
-.tabs {
+
+/* HMI Container */
+.hmi-container {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 20px 40px;
-  background: #0f1419;
-  border-bottom: 1px solid rgba(76, 219, 189, 0.2);
+  flex: 1;
+  overflow: hidden;
+  gap: 0;
 }
 
-.tab {
-  padding: 10px 24px;
-  background: rgba(76, 219, 189, 0.1);
-  border: none;
-  border-radius: 20px;
-  color: #a0aec0;
+/* Sidebar */
+.sidebar {
+  width: 200px;
+  background: #EAEFF5;
+  border-right: 2px solid rgba(42, 75, 124, 0.1);
+  padding: 24px 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.sidebar-title {
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: #2A4B7C;
+  text-transform: uppercase;
+  font-weight: 700;
+  padding: 8px 12px;
+}
+
+.nav-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 12px;
+  background: transparent;
+  border: 1.5px solid transparent;
+  border-radius: 10px;
+  color: #64748B;
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-.tab.active {
-  background: #4cdbbd;
-  color: #0f1419;
-}
-
-.tab:hover {
-  background: rgba(76, 219, 189, 0.2);
-}
-
-.tab-spacer {
-  flex: 1;
-}
-
-.tab-button {
-  padding: 8px 20px;
-  background: transparent;
-  border: 1px solid rgba(76, 219, 189, 0.3);
-  border-radius: 6px;
-  color: #a0aec0;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-.tab-button:hover {
-  border-color: #4cdbbd;
-  color: #4cdbbd;
-}
-
-/* Detail Header Bar (for logs/thresholds) */
-.detail-header-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 40px;
-  background: #0f1419;
-  border-bottom: 1px solid rgba(76, 219, 189, 0.2);
-  gap: 20px;
-}
-
-.back-menu {
-  padding: 8px 16px;
-  background: rgba(76, 219, 189, 0.1);
-  border: 1px solid rgba(76, 219, 189, 0.3);
-  border-radius: 6px;
-  color: #4cdbbd;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-.back-menu:hover {
-  background: rgba(76, 219, 189, 0.2);
-}
-
-.spacer {
-  flex: 1;
-}
-
-.detail-nav-btn {
-  padding: 8px 20px;
-  background: rgba(76, 219, 189, 0.1);
-  border: 1px solid rgba(76, 219, 189, 0.3);
-  border-radius: 6px;
-  color: #4cdbbd;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.detail-nav-btn.active {
-  background: rgba(76, 219, 189, 0.2);
-}
-
-/* Content */
-.content {
-  flex: 1;
-  padding: 40px;
-  overflow-y: auto;
-}
-
-/* Systems Grid */
-.systems-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 25px;
-}
-
-.system-card {
-  background: linear-gradient(135deg, rgba(26, 35, 50, 0.8) 0%, rgba(15, 20, 25, 0.8) 100%);
-  border: 1px solid rgba(76, 219, 189, 0.2);
-  border-radius: 16px;
-  padding: 24px;
-  cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
 }
 
-.system-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, #4cdbbd, transparent);
+.nav-btn:hover {
+  background: rgba(42, 75, 124, 0.08);
+  color: #2A4B7C;
 }
 
-.system-card:hover {
-  border-color: rgba(76, 219, 189, 0.5);
-  transform: translateY(-5px);
-  box-shadow: 0 15px 40px rgba(76, 219, 189, 0.15);
+.nav-btn.active {
+  background: #2A4B7C;
+  color: #FFFFFF;
+  border-color: #2A4B7C;
+  box-shadow: 0 4px 12px rgba(42, 75, 124, 0.25);
 }
 
-.card-icon {
-  font-size: 32px;
-  margin-bottom: 12px;
-}
-
-.card-title {
+.nav-icon {
   font-size: 18px;
-  font-weight: 600;
-  color: #ffffff;
-  margin-bottom: 8px;
-}
-
-.card-description {
-  font-size: 12px;
-  color: #a0aec0;
-}
-
-/* Detail View */
-.detail-view {
-  max-width: 1400px;
-}
-
-.back-button {
-  padding: 8px 16px;
-  background: rgba(76, 219, 189, 0.1);
-  border: 1px solid rgba(76, 219, 189, 0.3);
-  border-radius: 6px;
-  color: #4cdbbd;
-  cursor: pointer;
-  font-size: 13px;
-  margin-bottom: 30px;
-  transition: all 0.3s ease;
-}
-
-.back-button:hover {
-  background: rgba(76, 219, 189, 0.2);
-}
-
-.detail-header {
-  margin-bottom: 30px;
-}
-
-.detail-title {
-  font-size: 28px;
-  font-weight: 600;
-  color: #ffffff;
-  margin-bottom: 8px;
-}
-
-.detail-desc {
-  font-size: 13px;
-  color: #a0aec0;
-}
-
-/* Temperature Card */
-.temp-card {
-  background: linear-gradient(135deg, rgba(26, 35, 50, 0.8) 0%, rgba(15, 20, 25, 0.8) 100%);
-  border: 1px solid rgba(76, 219, 189, 0.2);
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 30px;
-  max-width: 280px;
-}
-
-.temp-icon {
-  font-size: 20px;
-  margin-bottom: 8px;
-}
-
-.temp-label {
-  font-size: 12px;
-  color: #a0aec0;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 8px;
-}
-
-.temp-value {
-  font-size: 24px;
-  font-weight: 600;
-  color: #4cdbbd;
-  margin-bottom: 8px;
-}
-
-.temp-chart {
-  height: 40px;
-  background: linear-gradient(90deg, #4cdbbd, rgba(76, 219, 189, 0.2));
-  border-radius: 4px;
-}
-
-/* Panels Grid */
-.panels-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-  gap: 25px;
-  margin-bottom: 30px;
-}
-
-.panel {
-  background: linear-gradient(135deg, rgba(26, 35, 50, 0.8) 0%, rgba(15, 20, 25, 0.8) 100%);
-  border: 1px solid rgba(76, 219, 189, 0.2);
-  border-radius: 16px;
-  padding: 24px;
-}
-
-.panel-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  justify-content: center;
+  width: 24px;
 }
 
-.panel-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #ffffff;
+.nav-label {
+  flex: 1;
+  text-align: left;
 }
 
-.panel-actions {
+.sidebar-divider {
+  height: 1px;
+  background: rgba(42, 75, 124, 0.15);
+}
+
+.sidebar-section {
   display: flex;
+  flex-direction: column;
   gap: 8px;
 }
 
-.btn-logs {
-  padding: 8px 14px;
-  background: rgba(76, 219, 189, 0.15);
-  border: 1px solid rgba(76, 219, 189, 0.4);
-  border-radius: 6px;
-  color: #4cdbbd;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 600;
-  transition: all 0.2s ease;
-  pointer-events: auto;
-  z-index: 10;
-}
-
-.btn-logs:hover {
-  background: rgba(76, 219, 189, 0.3);
-  border-color: #4cdbbd;
-  box-shadow: 0 2px 8px rgba(76, 219, 189, 0.2);
-}
-
-.btn-logs:active {
-  transform: scale(0.95);
-}
-
-.btn-open {
-  padding: 8px 14px;
-  background: rgba(76, 219, 189, 0.2);
-  border: 1px solid #4cdbbd;
-  border-radius: 6px;
-  color: #4cdbbd;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 600;
-  transition: all 0.2s ease;
-  pointer-events: auto;
-  z-index: 10;
-}
-
-.btn-open:hover {
-  background: rgba(76, 219, 189, 0.4);
-  box-shadow: 0 2px 8px rgba(76, 219, 189, 0.3);
-}
-
-.btn-open:active {
-  transform: scale(0.95);
-}
-
-.panel-info {
-  font-size: 12px;
-  color: #a0aec0;
-  margin-bottom: 16px;
-}
-
-.metrics-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.metrics-row:last-child {
-  margin-bottom: 0;
-}
-
-.metric {
-  background: rgba(26, 35, 50, 0.6);
-  border: 1px solid rgba(76, 219, 189, 0.15);
-  border-radius: 8px;
-  padding: 12px;
-}
-
-.metric-icon {
-  font-size: 16px;
-  margin-bottom: 4px;
-}
-
-.metric-label {
+.sidebar-label {
   font-size: 11px;
-  color: #a0aec0;
+  letter-spacing: 1px;
+  color: #64748B;
   text-transform: uppercase;
-  letter-spacing: 0.4px;
-  margin-bottom: 4px;
+  font-weight: 700;
+  padding: 8px 12px;
 }
 
-.metric-value {
-  font-size: 18px;
-  font-weight: 600;
-  color: #4cdbbd;
-  margin-bottom: 4px;
+/* Main Content Area */
+.main-content {
+  flex: 1;
+  background: #EAEFF5;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
-.metric-line {
-  height: 3px;
-  background: linear-gradient(90deg, #4cdbbd, rgba(76, 219, 189, 0.2));
-  border-radius: 2px;
+/* Monitoring View */
+.monitoring-view {
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  overflow-y: auto;
+  flex: 1;
 }
 
-/* Control Section */
-.control-section {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid rgba(76, 219, 189, 0.15);
-}
-
-.control-header {
+.view-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  gap: 20px;
   margin-bottom: 12px;
 }
 
-.control-title {
+.view-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: #1E293B;
+  margin: 0 0 8px 0;
+}
+
+.view-desc {
+  font-size: 14px;
+  color: #64748B;
+  margin: 0;
+}
+
+.mode-indicator {
+  padding: 8px 16px;
+  background: rgba(42, 75, 124, 0.1);
+  border-radius: 8px;
   font-size: 12px;
-  color: #a0aec0;
-  text-transform: uppercase;
+  font-weight: 600;
+  color: #64748B;
   letter-spacing: 0.5px;
+}
+
+.mode-indicator.active {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10B981;
+}
+
+/* Power Meter Panel */
+.power-meter-panel {
+  background: #FFFFFF;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 10px 10px 20px rgba(209, 217, 230, 0.5), -5px -5px 15px rgba(255, 255, 255, 0.8);
+}
+
+.power-meter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.power-meter-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1E293B;
+  margin: 0;
+}
+
+.status-badge {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.status-badge.normal {
+  background: rgba(16, 185, 129, 0.2);
+  color: #10B981;
+}
+
+.status-badge.warning {
+  background: rgba(245, 158, 11, 0.2);
+  color: #F59E0B;
+}
+
+.status-badge.critical {
+  background: rgba(225, 29, 72, 0.2);
+  color: #E11D48;
+}
+
+.meter-display {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+}
+
+.meter-item {
+  background: linear-gradient(135deg, #EAEFF5 0%, #F5F8FC 100%);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  position: relative;
+  box-shadow: 5px 5px 15px rgba(209, 217, 230, 0.3), -3px -3px 10px rgba(255, 255, 255, 0.6);
+}
+
+.meter-icon {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.meter-label {
+  font-size: 11px;
+  color: #64748B;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 8px;
   font-weight: 600;
 }
+
+.meter-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #2A4B7C;
+}
+
+
+/* ACB Control Panel */
+.acb-control-panel {
+  background: #FFFFFF;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 10px 10px 20px rgba(209, 217, 230, 0.5), -5px -5px 15px rgba(255, 255, 255, 0.8);
+}
+
+.acb-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(42, 75, 124, 0.1);
+}
+
+.acb-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1E293B;
+  margin: 0;
+}
+
+.btn-check-alert {
+  padding: 8px 16px;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1.5px solid #F59E0B;
+  border-radius: 8px;
+  color: #D97706;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-check-alert:hover {
+  background: rgba(245, 158, 11, 0.25);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+}
+
+/* ACB Channels */
+.acb-channel {
+  background: #F8FAFC;
+  border: 1.5px solid rgba(42, 75, 124, 0.1);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.acb-channel:last-child {
+  margin-bottom: 0;
+}
+
+.channel-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.channel-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1E293B;
+}
+
+.acb-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.acb-status.status-open {
+  background: rgba(16, 185, 129, 0.2);
+  color: #10B981;
+}
+
+.acb-status.status-closed {
+  background: rgba(59, 130, 246, 0.2);
+  color: #3B82F6;
+}
+
+.acb-status.status-trip {
+  background: rgba(225, 29, 72, 0.2);
+  color: #E11D48;
+}
+
+.channel-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.metric-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px;
+  background: linear-gradient(135deg, #EAEFF5 0%, #F5F8FC 100%);
+  border-radius: 10px;
+}
+
+.metric-label {
+  font-size: 10px;
+  color: #64748B;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  font-weight: 600;
+}
+
+.metric-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: #2A4B7C;
+}
+
 
 .acb-status {
   padding: 4px 12px;
@@ -1056,85 +1104,172 @@ const testClick = () => {
 .control-buttons {
   display: flex;
   gap: 8px;
+  align-items: center;
+  grid-column: 2;
+  flex-direction: column;
+  justify-content: center;
 }
 
-.btn-control {
+.btn-acb {
   flex: 1;
-  padding: 10px 12px;
+  padding: 12px 16px;
   border: none;
-  border-radius: 6px;
-  font-size: 12px;
+  border-radius: 8px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  pointer-events: auto;
-  z-index: 10;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  width: 100%;
+  box-shadow: 5px 5px 15px rgba(209, 217, 230, 0.3), -3px -3px 10px rgba(255, 255, 255, 0.6);
 }
 
-.btn-control:active {
-  transform: scale(0.95);
+.btn-acb:active {
+  transform: scale(0.98);
 }
 
-.btn-control-open {
-  background: rgba(76, 219, 189, 0.2);
-  color: #4cdbbd;
-  border: 1px solid #4cdbbd;
+.btn-acb:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
-.btn-control-open:hover {
-  background: rgba(76, 219, 189, 0.3);
-  box-shadow: 0 4px 12px rgba(76, 219, 189, 0.2);
+.btn-acb-open {
+  background: #10B981;
+  color: #FFFFFF;
 }
 
-.btn-control-trip {
-  background: rgba(249, 115, 22, 0.2);
-  color: #f97316;
-  border: 1px solid #f97316;
+.btn-acb-open:hover:not(:disabled) {
+  background: #059669;
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
 }
 
-.btn-control-trip:hover {
-  background: rgba(249, 115, 22, 0.3);
-  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.2);
+.btn-acb-trip {
+  background: #F59E0B;
+  color: #FFFFFF;
 }
 
-.btn-control-close {
-  background: rgba(239, 68, 68, 0.2);
-  color: #ef4444;
-  border: 1px solid #ef4444;
+.btn-acb-trip:hover {
+  background: #D97706;
+  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3);
 }
 
-.btn-control-close:hover {
-  background: rgba(239, 68, 68, 0.3);
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+.btn-acb-close {
+  background: #E11D48;
+  color: #FFFFFF;
 }
 
-.permission-notice {
-  padding: 10px 12px;
-  background: rgba(249, 115, 22, 0.1);
-  border: 1px solid rgba(249, 115, 22, 0.3);
-  border-radius: 6px;
-  color: #f97316;
+.btn-acb-close:hover:not(:disabled) {
+  background: #BE185D;
+  box-shadow: 0 8px 20px rgba(225, 29, 72, 0.3);
+}
+
+.control-disabled {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(59, 130, 246, 0.1);
+  border-radius: 8px;
+  color: #3B82F6;
   font-size: 12px;
   font-weight: 600;
   text-align: center;
 }
 
+.permission-notice {
+  grid-column: 2;
+  padding: 12px;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1.5px solid #F59E0B;
+  border-radius: 8px;
+  color: #D97706;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Mode Toggle */
+.mode-toggle {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.mode-btn {
+  flex: 1;
+  padding: 12px 20px;
+  background: rgba(42, 75, 124, 0.1);
+  border: 1.5px solid rgba(42, 75, 124, 0.2);
+  border-radius: 8px;
+  color: #64748B;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.mode-btn:hover {
+  background: rgba(42, 75, 124, 0.15);
+}
+
+.mode-btn.active {
+  background: #2A4B7C;
+  border-color: #2A4B7C;
+  color: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(42, 75, 124, 0.25);
+}
+
+/* Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex: 1;
+  padding: 40px;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 64px;
+  opacity: 0.4;
+}
+
+.empty-state h2 {
+  font-size: 24px;
+  color: #1E293B;
+  margin: 0;
+}
+
+.empty-state p {
+  font-size: 14px;
+  color: #64748B;
+  margin: 0;
+  max-width: 400px;
+}
+
 /* Logs View */
 .logs-view {
-  max-width: 1400px;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
 .page-title {
   font-size: 28px;
   font-weight: 600;
-  color: #ffffff;
+  color: #1E293B;
   margin-bottom: 8px;
 }
 
 .page-desc {
-  font-size: 13px;
-  color: #a0aec0;
-  margin-bottom: 30px;
+  font-size: 14px;
+  color: #64748B;
+  margin-bottom: 12px;
 }
 
 .logs-header {
@@ -1142,210 +1277,218 @@ const testClick = () => {
   justify-content: space-between;
   align-items: flex-start;
   gap: 20px;
-  margin-bottom: 25px;
+  margin-bottom: 24px;
   flex-wrap: wrap;
 }
 
 .stats-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 15px;
+  gap: 16px;
   flex: 1;
   min-width: 500px;
 }
 
 .stat {
-  background: rgba(26, 35, 50, 0.6);
-  border: 1px solid rgba(76, 219, 189, 0.2);
-  border-radius: 8px;
+  background: #FFFFFF;
+  border-radius: 12px;
   padding: 20px;
   text-align: center;
+  box-shadow: 10px 10px 20px rgba(209, 217, 230, 0.4), -5px -5px 15px rgba(255, 255, 255, 0.8);
 }
 
 .stat-label {
   font-size: 11px;
-  color: #a0aec0;
+  color: #64748B;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-bottom: 10px;
-  font-weight: 600;
+  margin-bottom: 12px;
+  font-weight: 700;
 }
 
 .stat-value {
-  font-size: 28px;
-  font-weight: 600;
-  color: #4cdbbd;
+  font-size: 32px;
+  font-weight: 700;
+  color: #2A4B7C;
 }
 
 .stat-value.alarm {
-  color: #ef4444;
+  color: #E11D48;
 }
 
 .logs-actions {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   flex-direction: column;
+  min-width: 140px;
 }
 
 .btn-export {
   padding: 10px 20px;
-  background: rgba(76, 219, 189, 0.2);
-  border: 1px solid #4cdbbd;
-  border-radius: 6px;
-  color: #4cdbbd;
+  background: #3B82F6;
+  border: none;
+  border-radius: 8px;
+  color: #FFFFFF;
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
   transition: all 0.3s ease;
   white-space: nowrap;
+  box-shadow: 5px 5px 15px rgba(59, 130, 246, 0.2);
 }
 
 .btn-export:hover {
-  background: rgba(76, 219, 189, 0.3);
+  background: #2563EB;
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
 }
 
 .btn-clear {
   padding: 10px 20px;
-  background: rgba(239, 68, 68, 0.2);
-  border: 1px solid #ef4444;
-  border-radius: 6px;
-  color: #ef4444;
+  background: #E11D48;
+  border: none;
+  border-radius: 8px;
+  color: #FFFFFF;
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
   transition: all 0.3s ease;
   white-space: nowrap;
+  box-shadow: 5px 5px 15px rgba(225, 29, 72, 0.2);
 }
 
 .btn-clear:hover {
-  background: rgba(239, 68, 68, 0.3);
+  background: #BE185D;
+  box-shadow: 0 8px 20px rgba(225, 29, 72, 0.3);
 }
 
 .filters {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   margin-bottom: 20px;
   flex-wrap: wrap;
 }
 
 .filter-btn {
   padding: 8px 16px;
-  background: rgba(76, 219, 189, 0.1);
-  border: 1px solid rgba(76, 219, 189, 0.3);
-  border-radius: 6px;
-  color: #a0aec0;
+  background: #FFFFFF;
+  border: 1.5px solid rgba(42, 75, 124, 0.2);
+  border-radius: 8px;
+  color: #64748B;
   cursor: pointer;
   font-size: 13px;
+  font-weight: 500;
   transition: all 0.3s ease;
+  box-shadow: 5px 5px 10px rgba(209, 217, 230, 0.2);
+}
+
+.filter-btn:hover {
+  border-color: rgba(42, 75, 124, 0.4);
 }
 
 .filter-btn.active {
-  background: #4cdbbd;
-  color: #0f1419;
-  border-color: #4cdbbd;
-}
-
-.filter-select {
-  padding: 8px 16px;
-  background: rgba(26, 35, 50, 0.6);
-  border: 1px solid rgba(76, 219, 189, 0.3);
-  border-radius: 6px;
-  color: #a0aec0;
-  cursor: pointer;
-  font-size: 13px;
+  background: #2A4B7C;
+  color: #FFFFFF;
+  border-color: #2A4B7C;
 }
 
 .logs-table {
   width: 100%;
   border-collapse: collapse;
-  background: linear-gradient(135deg, rgba(26, 35, 50, 0.6) 0%, rgba(15, 20, 25, 0.6) 100%);
-  border: 1px solid rgba(76, 219, 189, 0.2);
-  border-radius: 8px;
+  background: #FFFFFF;
+  border-radius: 12px;
   overflow: hidden;
+  box-shadow: 10px 10px 20px rgba(209, 217, 230, 0.4), -5px -5px 15px rgba(255, 255, 255, 0.8);
 }
 
 .logs-table thead {
-  border-bottom: 1px solid rgba(76, 219, 189, 0.2);
+  background: linear-gradient(135deg, #EAEFF5 0%, #F5F8FC 100%);
 }
 
 .logs-table th {
   padding: 16px;
   text-align: left;
   font-size: 11px;
-  font-weight: 600;
-  color: #4cdbbd;
+  font-weight: 700;
+  color: #2A4B7C;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  background: rgba(76, 219, 189, 0.05);
+  border-bottom: 1.5px solid rgba(42, 75, 124, 0.15);
 }
 
 .logs-table td {
   padding: 14px 16px;
   font-size: 13px;
-  color: #cbd5e0;
-  border-bottom: 1px solid rgba(76, 219, 189, 0.1);
+  color: #1E293B;
+  border-bottom: 1px solid rgba(42, 75, 124, 0.08);
 }
 
 .logs-table tbody tr:hover {
-  background: rgba(76, 219, 189, 0.05);
+  background: rgba(42, 75, 124, 0.03);
 }
 
 .badge {
   display: inline-block;
-  padding: 4px 12px;
-  border-radius: 12px;
+  padding: 6px 14px;
+  border-radius: 6px;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
 }
 
 .badge-normal {
-  background: rgba(76, 219, 189, 0.2);
-  color: #4cdbbd;
+  background: rgba(16, 185, 129, 0.2);
+  color: #10B981;
 }
 
 .badge-alarm {
-  background: rgba(239, 68, 68, 0.2);
-  color: #ef4444;
+  background: rgba(225, 29, 72, 0.2);
+  color: #E11D48;
 }
 
 /* Thresholds View */
 .thresholds-view {
-  max-width: 1400px;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
 .threshold-box {
-  background: linear-gradient(135deg, rgba(26, 35, 50, 0.8) 0%, rgba(15, 20, 25, 0.8) 100%);
-  border: 1px solid rgba(76, 219, 189, 0.2);
+  background: #FFFFFF;
   border-radius: 16px;
-  padding: 30px;
+  padding: 32px;
+  box-shadow: 10px 10px 20px rgba(209, 217, 230, 0.5), -5px -5px 15px rgba(255, 255, 255, 0.8);
 }
 
 .threshold-title {
-  font-size: 20px;
+  font-size: 24px;
   font-weight: 600;
-  color: #ffffff;
+  color: #1E293B;
   margin-bottom: 8px;
 }
 
 .threshold-desc {
-  font-size: 13px;
-  color: #a0aec0;
-  margin-bottom: 25px;
+  font-size: 14px;
+  color: #64748B;
+  margin-bottom: 24px;
 }
 
 .threshold-actions {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  margin-bottom: 25px;
+  margin-bottom: 28px;
+  padding-bottom: 20px;
+  border-bottom: 1.5px solid rgba(42, 75, 124, 0.1);
 }
 
 .btn-reset {
-  padding: 10px 20px;
-  background: rgba(76, 219, 189, 0.1);
-  border: 1px solid rgba(76, 219, 189, 0.5);
-  border-radius: 6px;
-  color: #4cdbbd;
+  padding: 10px 24px;
+  background: rgba(42, 75, 124, 0.1);
+  border: 1.5px solid rgba(42, 75, 124, 0.3);
+  border-radius: 8px;
+  color: #2A4B7C;
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
@@ -1353,125 +1496,205 @@ const testClick = () => {
 }
 
 .btn-reset:hover {
-  background: rgba(76, 219, 189, 0.2);
+  background: rgba(42, 75, 124, 0.15);
+  border-color: #2A4B7C;
 }
 
 .btn-save {
-  padding: 10px 20px;
-  background: #4cdbbd;
+  padding: 10px 24px;
+  background: #10B981;
   border: none;
-  border-radius: 6px;
-  color: #0f1419;
+  border-radius: 8px;
+  color: #FFFFFF;
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
   transition: all 0.3s ease;
+  box-shadow: 5px 5px 15px rgba(16, 185, 129, 0.2);
 }
 
 .btn-save:hover {
-  background: #3ac9ad;
-  box-shadow: 0 5px 15px rgba(76, 219, 189, 0.3);
+  background: #059669;
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
 }
 
 .threshold-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 20px;
 }
 
 .threshold-item {
-  background: rgba(26, 35, 50, 0.6);
-  border: 1px solid rgba(76, 219, 189, 0.15);
-  border-radius: 8px;
-  padding: 16px;
+  background: linear-gradient(135deg, #EAEFF5 0%, #F5F8FC 100%);
+  border: 1.5px solid rgba(42, 75, 124, 0.1);
+  border-radius: 12px;
+  padding: 20px;
 }
 
 .threshold-label {
   font-size: 13px;
-  color: #a0aec0;
-  margin-bottom: 12px;
-  font-weight: 600;
-  text-transform: capitalize;
+  color: #1E293B;
+  margin-bottom: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .threshold-fields {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 
 .field {
   display: flex;
   flex-direction: column;
+  gap: 6px;
 }
 
 .field label {
   font-size: 10px;
-  color: #718096;
+  color: #64748B;
   text-transform: uppercase;
   letter-spacing: 0.4px;
-  margin-bottom: 4px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .field input {
   padding: 8px 12px;
-  background: rgba(15, 20, 25, 0.6);
-  border: 1px solid rgba(76, 219, 189, 0.2);
-  border-radius: 4px;
-  color: #ffffff;
+  background: #FFFFFF;
+  border: 1.5px solid rgba(42, 75, 124, 0.15);
+  border-radius: 6px;
+  color: #1E293B;
   font-size: 13px;
+  font-weight: 500;
   transition: all 0.3s ease;
 }
 
 .field input:focus {
   outline: none;
-  border-color: #4cdbbd;
-  box-shadow: 0 0 0 2px rgba(76, 219, 189, 0.1);
+  border-color: #2A4B7C;
+  box-shadow: 0 0 0 3px rgba(42, 75, 124, 0.1);
+  background: #FAFBFC;
+}
+
+@media (max-width: 1200px) {
+  .acb-channel {
+    grid-template-columns: 1fr;
+  }
+
+  .channel-metrics {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .control-buttons {
+    grid-column: unset;
+    flex-direction: row;
+  }
+
+  .control-disabled {
+    grid-column: unset;
+  }
 }
 
 @media (max-width: 1024px) {
-  .header {
+  .header-top {
     flex-direction: column;
-    gap: 20px;
+    gap: 16px;
+    padding: 12px 20px;
+  }
+
+  .sidebar {
+    width: 160px;
+    padding: 16px 12px;
+  }
+
+  .monitoring-view {
+    padding: 20px;
   }
 
   .stats-row {
     grid-template-columns: repeat(2, 1fr);
-    min-width: auto;
   }
 
-  .panels-grid {
-    grid-template-columns: 1fr;
+  .meter-display {
+    grid-template-columns: repeat(2, 1fr);
   }
 
-  .metrics-row {
+  .threshold-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 768px) {
-  .header {
-    padding: 20px;
+  .hmi-container {
+    flex-direction: column;
   }
 
-  .content {
-    padding: 20px;
+  .sidebar {
+    width: 100%;
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 12px;
+    gap: 8px;
+    border-right: none;
+    border-bottom: 2px solid rgba(42, 75, 124, 0.1);
   }
 
-  .tabs {
-    padding: 20px;
+  .sidebar-title,
+  .sidebar-label {
+    display: none;
   }
 
-  .systems-grid {
+  .nav-buttons {
+    flex-direction: row;
+    gap: 6px;
+  }
+
+  .sidebar-divider {
+    display: none;
+  }
+
+  .sidebar-section {
+    flex-direction: row;
+    gap: 6px;
+  }
+
+  .main-content {
+    overflow-x: hidden;
+  }
+
+  .monitoring-view {
+    padding: 16px;
+  }
+
+  .power-meter-panel,
+  .acb-control-panel {
+    padding: 16px;
+  }
+
+  .acb-channel {
     grid-template-columns: 1fr;
+  }
+
+  .control-buttons {
+    flex-direction: row;
+  }
+
+  .logs-view,
+  .thresholds-view {
+    padding: 16px;
   }
 
   .stats-row {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .metrics-row {
+  .meter-display {
+    grid-template-columns: 1fr;
+  }
+
+  .threshold-grid {
     grid-template-columns: 1fr;
   }
 
@@ -1483,8 +1706,8 @@ const testClick = () => {
     flex-direction: row;
   }
 
-  .threshold-grid {
-    grid-template-columns: 1fr;
+  .mode-toggle {
+    flex-direction: column;
   }
 }
 </style>
