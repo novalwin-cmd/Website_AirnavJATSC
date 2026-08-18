@@ -51,28 +51,39 @@ const systems = ref({
 })
 
 const logsData = ref([
-  { time: '11/8/2026, 16:02.45', room: 'Panel 1', status: 'ALARM', detail: 'Voltage over high (235V > 242V threshold)' },
-  { time: '11/8/2026, 16:01.32', room: 'DSE 2', status: 'Normal', detail: 'temp: 29.1°C, voltage: 232V, current: 45A' },
-  { time: '11/8/2026, 16:00.15', room: 'Panel 2', status: 'ALARM', detail: 'Current over high (52A > 50A threshold)' },
-  { time: '11/8/2026, 15:59.52', room: 'DSE 1', status: 'Normal', detail: 'temp: 28.5°C, voltage: 231V, current: 42A' },
-  { time: '11/8/2026, 15:58.30', room: 'Panel 1', status: 'ALARM', detail: 'Frequency above high (50.65Hz > 50.5Hz)' },
-  { time: '11/8/2026, 15:57.18', room: 'DSE 2', status: 'ALARM', detail: 'Over frequency (50.6Hz > 50.5Hz)' },
-  { time: '11/8/2026, 15:56.05', room: 'Panel 2', status: 'Normal', detail: 'temp: 28.9°C, voltage: 233V, current: 48A' },
-  { time: '11/8/2026, 15:54.40', room: 'DSE 1', status: 'ALARM', detail: 'Temperature high (31.2°C > 30°C threshold)' },
-  { time: '11/8/2026, 15:53.22', room: 'Panel 1', status: 'Normal', detail: 'temp: 28.5°C, voltage: 231V, power: 22.5kW' },
-  { time: '11/8/2026, 15:52.10', room: 'DSE 2', status: 'Normal', detail: 'All systems normal' },
-  { time: '11/8/2026, 15:49.16', room: 'DSE 1', status: 'Normal', detail: 'System initialized' },
+  { time: '11/8/2026, 16:02.45', room: 'Panel A7', panel: 'panel1', status: 'ALARM', detail: 'Voltage over high (235V > 242V threshold)' },
+  { time: '11/8/2026, 16:01.32', room: 'Panel Prioritas Genset', panel: 'dse2', status: 'Normal', detail: 'temp: 29.1°C, voltage: 232V, current: 45A' },
+  { time: '11/8/2026, 16:00.15', room: 'Panel T7', panel: 'panel2', status: 'ALARM', detail: 'Current over high (52A > 50A threshold)' },
+  { time: '11/8/2026, 15:59.52', room: 'Panel Technical Genset', panel: 'dse1', status: 'Normal', detail: 'temp: 28.5°C, voltage: 231V, current: 42A' },
+  { time: '11/8/2026, 15:58.30', room: 'Panel A7', panel: 'panel1', status: 'ALARM', detail: 'Frequency above high (50.65Hz > 50.5Hz)' },
+  { time: '11/8/2026, 15:57.18', room: 'Panel Prioritas Genset', panel: 'dse2', status: 'ALARM', detail: 'Over frequency (50.6Hz > 50.5Hz)' },
+  { time: '11/8/2026, 15:56.05', room: 'Panel T7', panel: 'panel2', status: 'Normal', detail: 'temp: 28.9°C, voltage: 233V, current: 48A' },
+  { time: '11/8/2026, 15:54.40', room: 'Panel Technical Genset', panel: 'dse1', status: 'ALARM', detail: 'Temperature high (31.2°C > 30°C threshold)' },
+  { time: '11/8/2026, 15:53.22', room: 'Panel A7', panel: 'panel1', status: 'Normal', detail: 'temp: 28.5°C, voltage: 231V, power: 22.5kW' },
+  { time: '11/8/2026, 15:52.10', room: 'Panel Prioritas Genset', panel: 'dse2', status: 'Normal', detail: 'All systems normal' },
+  { time: '11/8/2026, 15:49.16', room: 'Panel Technical Genset', panel: 'dse1', status: 'Normal', detail: 'System initialized' },
 ])
 
 const logFilter = ref('all')
+const selectedPanelsForExport = ref({
+  dse1: true,
+  dse2: true,
+  panel1: true,
+  panel2: true
+})
+
 const filteredLogs = computed(() => {
+  let logs = logsData.value
+
+  // Filter by status
   if (logFilter.value === 'alarms') {
-    return logsData.value.filter(l => l.status === 'ALARM')
+    logs = logs.filter(l => l.status === 'ALARM')
   }
   if (logFilter.value === 'normal') {
-    return logsData.value.filter(l => l.status === 'Normal')
+    logs = logs.filter(l => l.status === 'Normal')
   }
-  return logsData.value
+
+  return logs
 })
 
 const logStats = computed(() => ({
@@ -187,12 +198,159 @@ const goToThresholds = () => {
   currentView.value = 'thresholds'
 }
 
-const exportCSV = () => {
-  alert('Exporting to CSV...')
+// Get logs for selected panels
+const getSelectedPanelsLogs = () => {
+  return filteredLogs.value.filter(log => selectedPanelsForExport.value[log.panel])
 }
 
+// Export to CSV
+const exportCSV = () => {
+  const logs = getSelectedPanelsLogs()
+  if (logs.length === 0) {
+    alert('No data to export. Select at least one panel.')
+    return
+  }
+
+  const headers = ['Time', 'Panel', 'Status', 'Details']
+  const csvContent = [
+    headers.join(','),
+    ...logs.map(log => [
+      `"${log.time}"`,
+      `"${log.room}"`,
+      `"${log.status}"`,
+      `"${log.detail}"`
+    ].join(','))
+  ].join('\n')
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+  const link = document.createElement('a')
+  const url = URL.createObjectURL(blob)
+  link.setAttribute('href', url)
+  link.setAttribute('download', `AMC_Logs_${new Date().toISOString().split('T')[0]}.csv`)
+  link.style.visibility = 'hidden'
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+
+  alert('✅ CSV exported successfully!')
+}
+
+// Export to Excel
 const exportExcel = () => {
-  alert('Exporting to Excel...')
+  const logs = getSelectedPanelsLogs()
+  if (logs.length === 0) {
+    alert('No data to export. Select at least one panel.')
+    return
+  }
+
+  const headers = ['Time', 'Panel', 'Status', 'Details']
+  const excelContent = [
+    headers.join('\t'),
+    ...logs.map(log => [
+      log.time,
+      log.room,
+      log.status,
+      log.detail
+    ].join('\t'))
+  ].join('\n')
+
+  const blob = new Blob([excelContent], { type: 'application/vnd.ms-excel;charset=utf-8;' })
+  const link = document.createElement('a')
+  const url = URL.createObjectURL(blob)
+  link.setAttribute('href', url)
+  link.setAttribute('download', `AMC_Logs_${new Date().toISOString().split('T')[0]}.xls`)
+  link.style.visibility = 'hidden'
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+
+  alert('✅ Excel file exported successfully!')
+}
+
+// Export to PDF
+const exportPDF = () => {
+  const logs = getSelectedPanelsLogs()
+  if (logs.length === 0) {
+    alert('No data to export. Select at least one panel.')
+    return
+  }
+
+  const selectedPanelsText = Object.entries(selectedPanelsForExport.value)
+    .filter(([_, v]) => v)
+    .map(([k, _]) => systems.value[k]?.name)
+    .join(', ')
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>AMC System Logs Report</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #4cdbbd; padding-bottom: 15px; }
+        .header h1 { color: #0f1419; margin: 0; font-size: 24px; }
+        .header p { color: #666; margin: 5px 0; }
+        .info { margin-bottom: 20px; background: white; padding: 15px; border-radius: 8px; }
+        .info-row { margin: 8px 0; }
+        .info-label { font-weight: bold; color: #333; }
+        table { width: 100%; border-collapse: collapse; background: white; margin-top: 20px; }
+        th { background: #0f1419; color: #4cdbbd; padding: 12px; text-align: left; font-weight: bold; border: 1px solid #ddd; }
+        td { padding: 10px 12px; border: 1px solid #ddd; }
+        tr:nth-child(even) { background: #f9f9f9; }
+        tr:hover { background: #f0f0f0; }
+        .alarm { color: #ef4444; font-weight: bold; }
+        .normal { color: #22c55e; font-weight: bold; }
+        .footer { margin-top: 30px; text-align: center; color: #666; font-size: 12px; border-top: 1px solid #ddd; padding-top: 15px; }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1>⚡ AMC System Logs Report</h1>
+        <p>AirNav Monitoring & Control - System Log Export</p>
+      </div>
+
+      <div class="info">
+        <div class="info-row"><span class="info-label">Exported Date:</span> ${new Date().toLocaleString()}</div>
+        <div class="info-row"><span class="info-label">Total Entries:</span> ${logs.length}</div>
+        <div class="info-row"><span class="info-label">Panels Included:</span> ${selectedPanelsText}</div>
+        <div class="info-row"><span class="info-label">Status Filter:</span> ${logFilter.value === 'all' ? 'All Events' : logFilter.value === 'alarms' ? 'Alarms Only' : 'Normal Events'}</div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Panel</th>
+            <th>Status</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${logs.map(log => '<tr><td>' + log.time + '</td><td>' + log.room + '</td><td><span class="' + (log.status === 'ALARM' ? 'alarm' : 'normal') + '">' + log.status + '</span></td><td>' + log.detail + '</td></tr>').join('')}
+        </tbody>
+      </table>
+
+      <div class="footer">
+        <p>This report was generated by AMC (AirNav Monitoring & Control) System</p>
+        <p>© 2026 AirNav. All rights reserved.</p>
+      </div>
+
+      <script>
+        window.print();
+      </script>
+    </body>
+    </html>
+  `
+
+  const blob = new Blob([htmlContent], { type: 'text/html' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `AMC_Logs_${new Date().toISOString().split('T')[0]}.html`
+  link.click()
+  URL.revokeObjectURL(url)
+
+  alert('✅ PDF export ready! Print dialog opening - select "Save as PDF" to save.')
 }
 
 const clearLogs = () => {
@@ -527,33 +685,71 @@ const getSystemStatusText = () => {
             <div class="stats-row">
               <div class="stat">
                 <div class="stat-label">TOTAL ENTRIES</div>
-                <div class="stat-value">{{ logStats.total }}</div>
+                <div class="stat-value">{{ filteredLogs.length }}</div>
               </div>
               <div class="stat">
                 <div class="stat-label">ALARMS</div>
-                <div class="stat-value alarm">{{ logStats.alarms }}</div>
+                <div class="stat-value alarm">{{ filteredLogs.filter(l => l.status === 'ALARM').length }}</div>
               </div>
               <div class="stat">
                 <div class="stat-label">NORMAL</div>
-                <div class="stat-value">{{ logStats.normal }}</div>
+                <div class="stat-value">{{ filteredLogs.filter(l => l.status === 'Normal').length }}</div>
               </div>
               <div class="stat">
-                <div class="stat-label">SYSTEMS AFFECTED</div>
-                <div class="stat-value">{{ logStats.rooms }}</div>
+                <div class="stat-label">SELECTED PANELS</div>
+                <div class="stat-value">{{ Object.values(selectedPanelsForExport).filter(v => v).length }}/4</div>
               </div>
             </div>
 
             <div class="logs-actions">
-              <button class="btn-export" @click="exportCSV">Export CSV</button>
-              <button class="btn-export" @click="exportExcel">Export Excel</button>
-              <button class="btn-clear" @click="clearLogs">Clear Logs</button>
+              <div class="export-buttons">
+                <button class="btn-export" @click="exportCSV" title="Export selected panels to CSV">📄 CSV</button>
+                <button class="btn-export" @click="exportExcel" title="Export selected panels to Excel">📊 Excel</button>
+                <button class="btn-export btn-export-pdf" @click="exportPDF" title="Export selected panels to PDF">📋 PDF</button>
+              </div>
+              <button class="btn-clear" @click="clearLogs">🗑️ Clear Logs</button>
+            </div>
+          </div>
+
+          <!-- Panel Selection -->
+          <div class="panel-selector">
+            <div class="selector-title">📌 Select Panels to Export:</div>
+            <div class="selector-options">
+              <label class="selector-checkbox">
+                <input type="checkbox" v-model="selectedPanelsForExport.dse1">
+                <span class="checkbox-label">⚙️ Panel Technical Genset</span>
+              </label>
+              <label class="selector-checkbox">
+                <input type="checkbox" v-model="selectedPanelsForExport.dse2">
+                <span class="checkbox-label">⚙️ Panel Prioritas Genset</span>
+              </label>
+              <label class="selector-checkbox">
+                <input type="checkbox" v-model="selectedPanelsForExport.panel1">
+                <span class="checkbox-label">📊 Panel A7</span>
+              </label>
+              <label class="selector-checkbox">
+                <input type="checkbox" v-model="selectedPanelsForExport.panel2">
+                <span class="checkbox-label">📊 Panel T7</span>
+              </label>
+              <button
+                class="select-all-btn"
+                @click="() => Object.keys(selectedPanelsForExport).forEach(k => selectedPanelsForExport[k] = true)"
+              >
+                ✓ Select All
+              </button>
+              <button
+                class="select-all-btn clear"
+                @click="() => Object.keys(selectedPanelsForExport).forEach(k => selectedPanelsForExport[k] = false)"
+              >
+                ✕ Clear All
+              </button>
             </div>
           </div>
 
           <div class="filters">
-            <button class="filter-btn" :class="{ active: logFilter === 'all' }" @click="logFilter = 'all'">All</button>
-            <button class="filter-btn" :class="{ active: logFilter === 'alarms' }" @click="logFilter = 'alarms'">Alarms</button>
-            <button class="filter-btn" :class="{ active: logFilter === 'normal' }" @click="logFilter = 'normal'">Normal</button>
+            <button class="filter-btn" :class="{ active: logFilter === 'all' }" @click="logFilter = 'all'">All Events</button>
+            <button class="filter-btn" :class="{ active: logFilter === 'alarms' }" @click="logFilter = 'alarms'">🚨 Alarms Only</button>
+            <button class="filter-btn" :class="{ active: logFilter === 'normal' }" @click="logFilter = 'normal'">✓ Normal Only</button>
           </div>
 
           <table class="logs-table">
@@ -1369,11 +1565,17 @@ const getSystemStatusText = () => {
   display: flex;
   gap: 12px;
   flex-direction: column;
-  min-width: 140px;
+  min-width: auto;
+}
+
+.export-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .btn-export {
-  padding: 10px 20px;
+  padding: 10px 16px;
   background: rgba(76, 219, 189, 0.2);
   border: 1px solid #4cdbbd;
   border-radius: 8px;
@@ -1388,6 +1590,14 @@ const getSystemStatusText = () => {
 .btn-export:hover {
   background: rgba(76, 219, 189, 0.3);
   box-shadow: 0 4px 12px rgba(76, 219, 189, 0.2);
+}
+
+.btn-export-pdf {
+  background: rgba(76, 219, 189, 0.15);
+}
+
+.btn-export-pdf:hover {
+  background: rgba(76, 219, 189, 0.25);
 }
 
 .btn-clear {
@@ -1413,6 +1623,89 @@ const getSystemStatusText = () => {
   gap: 12px;
   margin-bottom: 20px;
   flex-wrap: wrap;
+}
+
+/* Panel Selector */
+.panel-selector {
+  background: rgba(26, 35, 50, 0.6);
+  border: 1px solid rgba(76, 219, 189, 0.2);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.selector-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #4cdbbd;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.selector-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.selector-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(76, 219, 189, 0.08);
+  border: 1px solid rgba(76, 219, 189, 0.2);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  user-select: none;
+}
+
+.selector-checkbox:hover {
+  background: rgba(76, 219, 189, 0.15);
+  border-color: #4cdbbd;
+}
+
+.selector-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #4cdbbd;
+}
+
+.checkbox-label {
+  font-size: 13px;
+  color: #cbd5e0;
+  font-weight: 500;
+}
+
+.select-all-btn {
+  padding: 10px 14px;
+  background: rgba(76, 219, 189, 0.2);
+  border: 1px solid rgba(76, 219, 189, 0.3);
+  border-radius: 8px;
+  color: #4cdbbd;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.select-all-btn:hover {
+  background: rgba(76, 219, 189, 0.3);
+  border-color: #4cdbbd;
+}
+
+.select-all-btn.clear {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+.select-all-btn.clear:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: #ef4444;
 }
 
 .filter-btn {
