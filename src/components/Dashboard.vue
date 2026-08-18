@@ -22,31 +22,31 @@ const acbStatus = ref({
 const systems = ref({
   dse1: {
     id: 'dse1',
-    name: 'DSE 1',
-    description: '1 Panel Daya (ABB M1M) • Suhu Ruangan',
+    name: 'Panel Technical Genset',
+    description: 'Generator Set Technical • Voltage, Current & Frequency Control',
     icon: '⚙️',
-    fullDesc: '1 Panel Daya (ABB M1M) - DSE 1 Monitoring & Kontrol'
+    fullDesc: 'Panel Technical Genset - DSE 1 Real-time Monitoring & ACB Control'
   },
   dse2: {
     id: 'dse2',
-    name: 'DSE 2',
-    description: '1 Panel Daya (ABB M1M) • Suhu Ruangan',
+    name: 'Panel Prioritas Genset',
+    description: 'Priority Generator Set • Load Balancing & Protection',
     icon: '⚙️',
-    fullDesc: '1 Panel Daya (ABB M1M) - DSE 2 Monitoring & Kontrol'
+    fullDesc: 'Panel Prioritas Genset - DSE 2 Real-time Monitoring & ACB Control'
   },
   panel1: {
     id: 'panel1',
-    name: 'Panel Powermeter 1',
-    description: 'Power Meter & Kontrol ACB • Suhu Ruangan',
+    name: 'Panel A7',
+    description: 'Distribution Panel A7 • Power Meter & Load Control',
     icon: '📊',
-    fullDesc: 'Panel Powermeter 1 dengan Kontrol ACB'
+    fullDesc: 'Panel A7 - Power Distribution & ACB Control with Real-time Metrics'
   },
   panel2: {
     id: 'panel2',
-    name: 'Panel Powermeter 2',
-    description: 'Power Meter & Kontrol ACB • Suhu Ruangan',
+    name: 'Panel T7',
+    description: 'Distribution Panel T7 • Power Meter & Load Control',
     icon: '📊',
-    fullDesc: 'Panel Powermeter 2 dengan Kontrol ACB'
+    fullDesc: 'Panel T7 - Power Distribution & ACB Control with Real-time Metrics'
   }
 })
 
